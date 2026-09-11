@@ -1,0 +1,3321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>インパス</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFBF5;
+  --surface:#FFFFFF;
+  --ink:#2E2019;
+  --ink-soft:#8A7A6D;
+  --ink-faint:#B9AB9E;
+  --coral:#FF6F51;
+  --coral-dark:#E5573B;
+  --coral-soft:#FFE3DA;
+  --teal:#1B9E92;
+  --teal-dark:#12756C;
+  --teal-soft:#DBF3EF;
+  --sun:#FFB531;
+  --sun-soft:#FFEFD1;
+  --sky:#5B9BD9;
+  --sky-soft:#E3EFFC;
+  --line:#F1E6DA;
+  --danger:#E5484D;
+  --danger-soft:#FCE1E1;
+  --ok:#3FA76B;
+  --ok-soft:#E1F3E7;
+  --warn:#E5A427;
+  --warn-soft:#FCEED0;
+  --shadow-sm:0 2px 8px rgba(46,32,25,.06);
+  --shadow-md:0 10px 28px rgba(46,32,25,.10);
+  --shadow-lg:0 18px 44px rgba(46,32,25,.16);
+  --r-lg:26px;
+  --r-md:18px;
+  --r-sm:12px;
+  --r-pill:999px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Zen Kaku Gothic New',-apple-system,BlinkMacSystemFont,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;
+}
+.jp-display{font-family:'M PLUS Rounded 1c','Zen Kaku Gothic New',sans-serif;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+::selection{background:var(--coral-soft);}
+a{color:inherit;text-decoration:none;}
+img,svg{display:block;}
+
+/* ---------- App shell layout ---------- */
+#root{min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+
+.mode-switch{
+  width:100%;
+  max-width:920px;
+  display:flex;
+  gap:8px;
+  padding:10px 14px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.mode-btn{
+  border:1.5px solid var(--line);
+  background:var(--surface);
+  color:var(--ink-soft);
+  padding:8px 16px;
+  border-radius:var(--r-pill);
+  font-size:12.5px;
+  font-weight:700;
+  letter-spacing:.02em;
+  transition:.15s;
+}
+.mode-btn.active{
+  background:var(--ink);
+  color:#fff;
+  border-color:var(--ink);
+}
+
+/* ---------- Phone shell (user & staff) ---------- */
+.phone-shell{
+  width:100%;
+  max-width:430px;
+  height:100vh;
+  height:100dvh; /* dynamic viewport height: correctly accounts for mobile browser UI (address bar etc.) */
+  background:var(--bg);
+  position:relative;
+  box-shadow:var(--shadow-lg);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+@media(min-width:520px){
+  .phone-shell{
+    height:860px;
+    margin:16px auto 40px;
+    border-radius:44px;
+    border:8px solid var(--ink);
+  }
+}
+@media (orientation:landscape) and (max-height:500px){
+  .bottom-nav{ padding-top:4px; padding-bottom:calc(4px + env(safe-area-inset-bottom)); }
+  .nav-item{ padding:3px 2px; }
+  .nav-item svg{ width:18px; height:18px; }
+}
+.phone-notch{
+  display:none;
+}
+@media(min-width:520px){
+  .phone-notch{
+    display:block;
+    position:absolute;
+    top:0;left:50%;transform:translateX(-50%);
+    width:120px;height:22px;
+    background:var(--ink);
+    border-radius:0 0 16px 16px;
+    z-index:50;
+  }
+}
+
+.screen{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-bottom:calc(92px + env(safe-area-inset-bottom));
+  scrollbar-width:none;
+  position:relative;
+}
+.screen::-webkit-scrollbar{display:none;}
+
+/* Top bar */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:rgba(255,251,245,.92);
+  backdrop-filter:blur(10px);
+  padding:16px 18px 10px;
+  display:flex;align-items:center;gap:10px;
+}
+.topbar h1{margin:0;font-size:19px;font-weight:800;}
+.back-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--surface);border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.back-btn svg{width:16px;height:16px;}
+.icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--surface);border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-left:auto;
+}
+
+/* Bottom nav */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;right:0;
+  background:var(--surface);
+  border-top:1px solid var(--line);
+  display:flex;
+  padding:8px 6px calc(10px + env(safe-area-inset-bottom));
+  z-index:30;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;color:var(--ink-faint);
+  padding:6px 2px;border-radius:12px;
+}
+.nav-item svg{width:22px;height:22px;}
+.nav-item span{font-size:10.5px;font-weight:700;}
+.nav-item.active{color:var(--coral);}
+
+/* iPhoneのみ：Liquid Glass風の半透明ガラス表示（Android/PCは既存デザインのまま） */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)){
+  html.iphone .bottom-nav{
+    background:rgba(255,251,245,.68);
+    -webkit-backdrop-filter:blur(22px) saturate(180%);
+    backdrop-filter:blur(22px) saturate(180%);
+    border-top:1px solid rgba(255,255,255,.55);
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -4px 24px rgba(46,32,25,.08);
+  }
+  html.iphone .nav-item{ transition:transform .12s ease, opacity .12s ease; }
+  html.iphone .nav-item:active{ transform:scale(0.90); opacity:.65; }
+}
+
+/* ---------- Generic components ---------- */
+.section-title{
+  font-size:15.5px;font-weight:800;margin:22px 18px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.section-title .more{font-size:12px;color:var(--ink-soft);font-weight:700;}
+.hscroll{
+  display:flex;gap:12px;overflow-x:auto;padding:0 18px 4px;
+  scrollbar-width:none;
+}
+.hscroll::-webkit-scrollbar{display:none;}
+
+.event-card{
+  flex-shrink:0;width:230px;background:var(--surface);
+  border-radius:var(--r-md);box-shadow:var(--shadow-sm);
+  overflow:hidden;border:1px solid var(--line);
+}
+.event-card.wide{width:100%;flex-shrink:1;display:flex;}
+.event-hero{
+  height:120px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;
+}
+.event-card.wide .event-hero{width:104px;height:auto;font-size:30px;flex-shrink:0;}
+.event-body{padding:12px 13px 14px;flex:1;min-width:0;}
+.event-cat-chip{
+  position:absolute;top:9px;left:9px;
+  background:rgba(255,255,255,.85);color:var(--ink);
+  font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:var(--r-pill);
+}
+.fav-toggle{
+  position:absolute;top:8px;right:8px;
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.88);border:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.fav-toggle svg{width:16px;height:16px;}
+.event-name{font-size:14.5px;font-weight:800;margin:0 0 4px;line-height:1.35;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.event-meta{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.event-meta svg{width:12px;height:12px;flex-shrink:0;}
+
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding:0 18px;scrollbar-width:none;}
+.chip-row::-webkit-scrollbar{display:none;}
+.chip{
+  flex-shrink:0;padding:8px 15px;border-radius:var(--r-pill);
+  background:var(--surface);border:1.5px solid var(--line);
+  font-size:12.5px;font-weight:700;color:var(--ink-soft);
+}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:none;border-radius:var(--r-pill);font-weight:800;font-size:14px;
+  padding:14px 20px;width:100%;
+}
+.btn-primary{background:var(--coral);color:#fff;box-shadow:0 8px 18px rgba(255,111,81,.35);}
+.btn-primary:active{background:var(--coral-dark);}
+.btn-secondary{background:var(--teal-soft);color:var(--teal-dark);}
+.btn-outline{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);}
+.btn-sm{padding:9px 14px;font-size:12.5px;width:auto;}
+.btn:disabled{opacity:.45;}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-sm);}
+.pad{padding:16px 18px;}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:var(--r-pill);}
+.badge-green{background:var(--ok-soft);color:var(--ok);}
+.badge-yellow{background:var(--warn-soft);color:var(--warn);}
+.badge-red{background:var(--danger-soft);color:var(--danger);}
+.badge-outline{background:var(--sky-soft);color:var(--sky);}
+.badge-ended{background:#EFE9E2;color:var(--ink-faint);}
+.status-chip{position:absolute;bottom:9px;left:9px;font-size:10px;padding:3px 9px;}
+.share-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.9);border:none;display:flex;align-items:center;justify-content:center;}
+.share-btn svg{width:16px;height:16px;}
+.geo-banner{margin:0 18px 14px;padding:12px 14px;border-radius:var(--r-md);background:var(--sky-soft);color:var(--sky);font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;justify-content:space-between;}
+.geo-banner button{flex-shrink:0;background:var(--sky);color:#fff;border:none;border-radius:var(--r-pill);padding:7px 12px;font-size:11.5px;font-weight:800;}
+.myevent-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--line);border-radius:var(--r-md);margin:0 18px 10px;}
+.myevent-row .em{font-size:26px;width:42px;text-align:center;flex-shrink:0;}
+.postevent-hero{margin:14px 18px;padding:20px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--teal-soft),var(--sky-soft));text-align:center;}
+.postevent-links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 18px 14px;}
+.postevent-link{padding:14px;border-radius:var(--r-md);background:var(--surface);border:1.5px solid var(--line);text-align:center;font-size:12.5px;font-weight:800;}
+.danger-zone{margin:20px 18px;padding:16px;border-radius:var(--r-md);border:1.5px solid var(--danger-soft);background:#FFFBFA;}
+.btn-danger,.danger-zone .btn-danger{background:var(--danger);color:#fff;}
+
+.empty-state{padding:60px 30px;text-align:center;color:var(--ink-soft);}
+.empty-state .em{font-size:38px;margin-bottom:10px;}
+
+.hr{height:1px;background:var(--line);margin:14px 0;border:none;}
+
+/* Search */
+.search-box{
+  margin:4px 18px 14px;background:var(--surface);border:1.5px solid var(--line);
+  border-radius:var(--r-pill);display:flex;align-items:center;gap:8px;padding:12px 16px;
+}
+.search-box input{border:none;background:none;outline:none;font-size:14px;width:100%;color:var(--ink);}
+.search-box svg{width:17px;height:17px;flex-shrink:0;color:var(--ink-faint);}
+.field-label{font-size:12px;font-weight:800;color:var(--ink-soft);margin:16px 18px 8px;}
+.field-input{
+  margin:0 18px;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-sm);
+  padding:11px 13px;font-size:13.5px;width:calc(100% - 36px);outline:none;color:var(--ink);
+}
+
+/* Detail tabs */
+.detail-hero{height:230px;position:relative;display:flex;align-items:flex-end;}
+.detail-hero-inner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:78px;}
+.detail-hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45) 100%);}
+.detail-top-actions{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;z-index:5;}
+.circle-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.9);border:none;display:flex;align-items:center;justify-content:center;}
+.circle-btn svg{width:17px;height:17px;}
+.detail-header-text{position:absolute;bottom:16px;left:18px;right:18px;color:#fff;z-index:5;}
+.detail-header-text h2{font-size:21px;margin:0 0 6px;font-weight:800;}
+.detail-header-text .meta{font-size:12.5px;opacity:.92;display:flex;gap:6px;align-items:center;}
+
+.tabbar{
+  display:flex;gap:6px;overflow-x:auto;padding:14px 18px 10px;
+  position:sticky;top:0;background:var(--bg);z-index:15;scrollbar-width:none;
+  border-bottom:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none;}
+.tabbtn{flex-shrink:0;padding:8px 14px;border-radius:var(--r-pill);border:1.5px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:700;color:var(--ink-soft);}
+.tabbtn.active{background:var(--coral);border-color:var(--coral);color:#fff;}
+
+.sched-row{display:flex;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);}
+.sched-time{font-weight:800;font-size:13.5px;width:52px;flex-shrink:0;color:var(--coral-dark);}
+.sched-title{font-size:13.5px;font-weight:700;}
+.sched-sub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+
+.notice-item{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;gap:10px;}
+.notice-item.important{background:var(--coral-soft);}
+.notice-dot{width:8px;height:8px;border-radius:50%;background:var(--coral);margin-top:6px;flex-shrink:0;}
+.notice-item.important .notice-dot{background:var(--danger);}
+.notice-date{font-size:11px;color:var(--ink-soft);margin-bottom:2px;}
+.notice-title{font-size:13.5px;font-weight:800;}
+.notice-body{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+
+.map-wrap{margin:10px 18px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--line);}
+.map-svg{width:100%;display:block;background:#EAF4EE;}
+.map-pin{cursor:pointer;}
+.map-legend{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px 4px;}
+.legend-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-soft);}
+.legend-dot{width:9px;height:9px;border-radius:50%;}
+
+.congestion-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);}
+.congestion-name{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;}
+
+.heat-hero{margin:14px 18px;padding:18px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--warn-soft),var(--sun-soft));text-align:center;}
+.heat-hero .lvl{font-size:26px;font-weight:800;margin:6px 0;}
+.heat-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 18px;}
+.heat-stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 8px;text-align:center;}
+.heat-stat .val{font-size:17px;font-weight:800;}
+.heat-stat .lbl{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px 18px;}
+.photo-tile{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+
+.ticket-type-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r-md);margin:0 18px 10px;}
+.ticket-type-name{font-size:13.5px;font-weight:800;}
+.ticket-type-sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+
+/* My ticket card */
+.mticket{margin:0 18px 16px;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-md);position:relative;}
+.mticket-top{padding:18px 20px;color:#fff;position:relative;}
+.mticket-top .tname{font-size:15.5px;font-weight:800;margin:0 0 4px;}
+.mticket-top .tdate{font-size:12px;opacity:.9;}
+.mticket-punch{position:relative;height:0;}
+.mticket-punch::before,.mticket-punch::after{
+  content:'';position:absolute;top:-10px;width:20px;height:20px;border-radius:50%;background:var(--bg);
+}
+.mticket-punch::before{left:-10px;}
+.mticket-punch::after{right:-10px;}
+.mticket-bottom{background:var(--surface);padding:16px 20px 18px;border-top:2px dashed var(--line);}
+.qr-box{display:flex;justify-content:center;padding:10px 0 6px;}
+.ticket-id-text{text-align:center;font-size:11.5px;color:var(--ink-soft);letter-spacing:.03em;margin-bottom:8px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(46,32,25,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+@media(min-width:520px){.modal-overlay{align-items:center;}}
+.modal-sheet{background:var(--surface);width:100%;max-width:430px;border-radius:26px 26px 0 0;padding:22px;max-height:85vh;overflow-y:auto;}
+@media(min-width:520px){.modal-sheet{border-radius:26px;}}
+.modal-handle{width:40px;height:5px;background:var(--line);border-radius:3px;margin:0 auto 16px;}
+
+.toast{
+  position:fixed;bottom:110px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:var(--r-pill);
+  font-size:13px;font-weight:700;z-index:300;box-shadow:var(--shadow-md);
+  animation:toastIn .25s ease-out;
+}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+
+.menu-list{margin:6px 18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;}
+.menu-row{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:700;}
+.menu-row:last-child{border-bottom:none;}
+.menu-row svg{width:18px;height:18px;color:var(--ink-soft);}
+.menu-row .chev{margin-left:auto;width:14px;height:14px;color:var(--ink-faint);}
+
+/* ---------- Splash ---------- */
+.splash{
+  position:fixed;inset:0;z-index:1000;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .5s ease, transform .5s ease;
+}
+.splash.hide{opacity:0;transform:scale(1.04);pointer-events:none;}
+.splash-mark{width:92px;height:92px;opacity:0;transform:scale(.4);animation:markIn .55s cubic-bezier(.2,1.4,.4,1) .12s forwards;}
+@keyframes markIn{to{opacity:1;transform:scale(1);}}
+.splash-word{display:flex;overflow:hidden;margin-top:16px;}
+.splash-word span{
+  font-family:'M PLUS Rounded 1c';font-weight:800;font-size:30px;color:var(--ink);
+  opacity:0;transform:translateY(6px);animation:letterIn .38s ease forwards;
+}
+@keyframes letterIn{to{opacity:1;transform:translateY(0);}}
+.splash-tag{margin-top:10px;font-size:13px;color:var(--ink-soft);font-weight:700;opacity:0;animation:fadeIn .5s ease .95s forwards;letter-spacing:.02em;}
+@keyframes fadeIn{to{opacity:1;}}
+
+/* ---------- Admin (desktop dashboard) ---------- */
+.admin-shell{width:100%;max-width:1180px;padding:0 20px 60px;}
+.admin-topbar{display:flex;align-items:center;gap:14px;padding:22px 4px 18px;flex-wrap:wrap;}
+.admin-topbar h1{font-size:22px;font-weight:800;margin:0;}
+.admin-topbar .sub{font-size:12.5px;color:var(--ink-soft);}
+.admin-layout{display:flex;gap:20px;}
+.admin-side{width:190px;flex-shrink:0;}
+.admin-nav-item{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--r-sm);
+  font-size:13px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;border:none;background:none;width:100%;text-align:left;
+}
+.admin-nav-item.active{background:var(--ink);color:#fff;}
+.admin-main{flex:1;min-width:0;}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px;box-shadow:var(--shadow-sm);}
+.stat-card .num{font-size:24px;font-weight:800;}
+.stat-card .lbl{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+.two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+@media(max-width:800px){.two-col{grid-template-columns:1fr;}.admin-layout{flex-direction:column;}.admin-side{width:100%;display:flex;gap:6px;overflow-x:auto;}}
+.table{width:100%;border-collapse:collapse;font-size:13px;}
+.table th{text-align:left;font-size:11.5px;color:var(--ink-soft);padding:8px 10px;border-bottom:1.5px solid var(--line);}
+.table td{padding:11px 10px;border-bottom:1px solid var(--line);}
+.admin-form-row{margin-bottom:14px;}
+.admin-form-row label{display:block;font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:6px;}
+.admin-form-row input,.admin-form-row select,.admin-form-row textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--r-sm);font-size:13.5px;outline:none;color:var(--ink);
+}
+.admin-form-row textarea{resize:vertical;min-height:70px;}
+.color-swatches{display:flex;gap:8px;flex-wrap:wrap;}
+.swatch{width:34px;height:34px;border-radius:10px;border:2px solid transparent;cursor:pointer;}
+.swatch.sel{border-color:var(--ink);}
+
+/* Staff */
+.staff-shell{padding:26px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:100%;}
+.staff-scanner{
+  width:230px;height:230px;border-radius:28px;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;margin:26px 0;position:relative;overflow:hidden;
+}
+.staff-scanner svg{width:80px;height:80px;color:#fff;opacity:.85;}
+.staff-scanner video{width:100%;height:100%;object-fit:cover;}
+.scan-line{position:absolute;left:8%;right:8%;height:2px;background:var(--coral);box-shadow:0 0 12px 2px var(--coral);animation:scanmove 1.6s ease-in-out infinite;}
+@keyframes scanmove{0%{top:12%;}50%{top:88%;}100%{top:12%;}}
+.result-card{width:100%;max-width:340px;border-radius:var(--r-lg);padding:26px 22px;margin-top:8px;}
+.result-card .icon{font-size:40px;margin-bottom:8px;}
+.result-card .status{font-size:17px;font-weight:800;margin-bottom:4px;}
+.result-card .desc{font-size:12.5px;opacity:.85;}
+
+@media(max-width:400px){.jp-display{letter-spacing:0;}}
+
+/* ---------- Auth / status / banner additions ---------- */
+.status-banner{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  width:100%;max-width:430px;margin:0 auto;padding:9px 16px;text-align:center;
+  font-size:11.5px;font-weight:700;line-height:1.5;
+}
+.status-banner.demo{background:#FFF3D6;color:#8A6A1A;}
+.status-banner.offline{background:var(--danger-soft);color:var(--danger);}
+.auth-tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--bg);border-radius:var(--r-pill);padding:4px;}
+.auth-tab{flex:1;text-align:center;padding:9px 0;border-radius:var(--r-pill);font-size:12.5px;font-weight:800;color:var(--ink-soft);border:none;background:none;}
+.auth-tab.active{background:var(--surface);color:var(--coral-dark);box-shadow:var(--shadow-sm);}
+.form-field{margin-bottom:12px;}
+.form-field label{display:block;font-size:11.5px;font-weight:800;color:var(--ink-soft);margin-bottom:5px;}
+.form-field input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-sm);font-size:14px;outline:none;color:var(--ink);}
+.form-error{background:var(--danger-soft);color:var(--danger);font-size:12px;font-weight:700;padding:10px 12px;border-radius:var(--r-sm);margin-bottom:12px;}
+.form-note{font-size:11px;color:var(--ink-faint);margin-top:10px;line-height:1.6;}
+.role-tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:var(--r-pill);background:var(--sky-soft);color:var(--sky);margin-left:6px;}
+.spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.skeleton{background:linear-gradient(90deg,var(--line) 25%,#F8F0E8 37%,var(--line) 63%);background-size:400% 100%;animation:sk 1.4s ease infinite;border-radius:var(--r-sm);}
+@keyframes sk{0%{background-position:100% 50%;}100%{background-position:0 50%;}}
+.mock-flag{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:var(--ink-faint);border:1px solid var(--line);padding:1px 7px;border-radius:var(--r-pill);margin-left:6px;vertical-align:1px;}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FF6F51">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="インパス">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" href="favicon.ico">
+<!-- QRコード生成・読み取りライブラリはアプリ内（vendor/）に同梱しており、外部CDNには依存しません。
+     万一 vendor/ 内のファイルが見つからない場合のみ、緊急フォールバックとしてCDNから読み込みを試みます。 -->
+<script src="vendor/qrcode.js" onerror="window.__qrLibLocalFailed=true;(function(){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';s.onerror=function(){window.__qrLibFailed=true;};document.head.appendChild(s);})();"></script>
+<script src="vendor/jsQR.js" onerror="window.__jsQrLocalFailed=true;(function(){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js';s.onerror=function(){window.__jsQrLibFailed=true;};document.head.appendChild(s);})();"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+/* ============================================================
+   インパス
+   ------------------------------------------------------------
+   既定では、このブラウザの localStorage だけで動く「ローカルモード」
+   です（インストール不要・設定不要ですぐ動きます）。
+
+   下記の supabaseConfig にプロジェクトのURLとanon keyを設定すると、
+   自動的に「クラウドモード」に切り替わり、Supabase（Postgres +
+   Authentication + Storage + Realtime）を使って複数端末間でデータが
+   同期され、QRチェックインの有効性もサーバー側（Postgres関数）で
+   検証されるようになります。設定方法は README.md を参照してください。
+   ============================================================ */
+const supabaseConfig = {
+  url: "https://vpbygbpjbgtbdmqqpour.supabase.co",
+  anonKey: "sb_publishable_gQ-chZ137ZdweXsnFc2XqA_5OoQrKEx",
+};
+const CLOUD_MODE = !!(supabaseConfig.url && supabaseConfig.anonKey
+  && !supabaseConfig.url.startsWith("YOUR_") && !supabaseConfig.anonKey.startsWith("YOUR_"));
+
+/* iPhone判定（iPadやAndroidには適用しない）。Liquid Glass風の下部バー表示にのみ使用。 */
+const _ua = navigator.userAgent;
+const _isIPadOSDisguisedAsMac = /Macintosh/.test(_ua) && navigator.maxTouchPoints > 1; // iPadOS 13+
+const IS_IPHONE = /iPhone|iPod/.test(_ua) && !/iPad/.test(_ua) && !_isIPadOSDisguisedAsMac;
+if(IS_IPHONE){ document.documentElement.classList.add('iphone'); }
+
+/* ------------------------------------------------------------
+   ⚠️ 開発・確認用パスワード（本番の権限管理ではありません）
+   ------------------------------------------------------------
+   「メニュー → アプリモード」から主催者／スタッフ画面を開く際の、
+   誰でも入力できてしまう画面上部の切り替えボタンを廃止するための
+   簡易的なUI上のロックです。実際のデータ操作（イベント編集・
+   チェックインなど）は、これとは独立して Supabase の RLS / RPC
+   （schema.sql参照）がサーバー側で権限チェックを行っています。
+   このパスワードを知っているだけでは、本物の主催者・スタッフ権限
+   は一切付与されません。本番運用では、Supabase側でrole（admin_set_role
+   関数など）を正しく付与したアカウントでログインしてください。
+------------------------------------------------------------- */
+const DEV_MODE_PASSWORD = "7852";
+
+let sb = null; // Supabase client（クラウドモード時のみセット）
+async function bootSupabase(){
+  if(!CLOUD_MODE) return false;
+  try{
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    sb = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+    });
+    return true;
+  }catch(err){
+    console.error("Supabase init failed", err);
+    return false;
+  }
+}
+
+/* Friendly Japanese error mapping（ローカルモードのコード／Supabaseのメッセージの両方に対応） */
+function friendlyError(err){
+  const code = err && err.code ? err.code : "";
+  const msg = (err && err.message) ? String(err.message) : "";
+  const map = {
+    "auth/invalid-email":"メールアドレスの形式が正しくありません。",
+    "auth/email-already-in-use":"このメールアドレスはすでに登録されています。",
+    "auth/weak-password":"パスワードは6文字以上で設定してください。",
+    "auth/wrong-password":"メールアドレスまたはパスワードが正しくありません。",
+    "auth/user-not-found":"メールアドレスまたはパスワードが正しくありません。",
+    "storage-unavailable":"このブラウザではデータの保存機能が利用できません（プライベートブラウジング中は保存できない場合があります）。",
+    "organizer-required":"イベントの作成には「主催者」権限が必要です。Supabaseの profiles テーブルで、ご自身の role を organizer（または admin）に変更してください。",
+  };
+  if(map[code]) return map[code];
+  // Supabaseのエラーメッセージ（英語）をよくあるパターンで日本語化
+  const patterns = [
+    [/invalid login credentials/i, "メールアドレスまたはパスワードが正しくありません。"],
+    [/user already registered/i, "このメールアドレスはすでに登録されています。"],
+    [/password should be at least/i, "パスワードは6文字以上で設定してください。"],
+    [/email not confirmed/i, "メールアドレスの確認が完了していません。届いた確認メールをご確認ください。"],
+    [/rate limit/i, "試行回数が多すぎます。しばらくしてからもう一度お試しください。"],
+    [/network/i, "通信に失敗しました。インターネット接続を確認してください。"],
+    [/fetch/i, "通信に失敗しました。インターネット接続を確認してください。"],
+    [/jwt|permission|policy|rls/i, "この操作を行う権限がありません。"],
+  ];
+  for(const [re,jp] of patterns){ if(re.test(msg)) return jp; }
+  if(msg) console.error('Unmapped error (showing generic Japanese message to user):', msg);
+  return "データを取得できませんでした。通信環境を確認して、もう一度お試しください。";
+}
+
+/* ---------- Icons ---------- */
+const ICONS = {
+  home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9"/></svg>`,
+  search:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`,
+  ticket:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3V9Z"/><path d="M13 7v10" stroke-dasharray="2 2"/></svg>`,
+  heart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-10-9.4C.5 7.8 2.3 4.5 5.7 4.1c2-.2 3.7.9 4.9 2.6 1.2-1.7 2.9-2.8 4.9-2.6 3.4.4 5.2 3.7 3.7 7-2.5 4.8-10 9.4-10 9.4Z"/></svg>`,
+  menu:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`,
+  back:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
+  pin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.6 7-12a7 7 0 1 0-14 0c0 5.4 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></svg>`,
+  calendar:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>`,
+  chev:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`,
+  bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5c0-3.6-2.7-6-6-6s-6 2.4-6 6c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>`,
+  user:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20.2c1.5-3.6 4.4-5.4 7.5-5.4s6 1.8 7.5 5.4"/></svg>`,
+  question:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.7 2.2c-.9.5-1.2 1-1.2 1.9"/><circle cx="12" cy="17" r=".4" fill="currentColor"/></svg>`,
+  info:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>`,
+  cog:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>`,
+  camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z"/><circle cx="12" cy="13" r="3.4"/></svg>`,
+  chat:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v11H9.5L5 20v-3.5H4v-11Z"/></svg>`,
+  logout:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9M16 17l5-5-5-5M21 12H9"/></svg>`,
+  qr:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM14 20h3M20 14v3M20 20v.01"/></svg>`,
+  star:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.7 6.4 6.9.6-5.3 4.6 1.7 6.8L12 17.3 5.9 21l1.7-6.8-5.3-4.6 6.9-.6L12 2.5Z"/></svg>`,
+};
+function icon(name,cls){return `<span class="${cls||''}">${ICONS[name]||''}</span>`;}
+
+/* ---------- Seed data ---------- */
+/* ---------- i18n（日本語／英語） ---------- */
+const I18N = {
+  ja: {
+    nav_home:"ホーム", nav_search:"さがす", nav_tickets:"チケット", nav_favorites:"お気に入り", nav_menu:"メニュー",
+    title_mytickets:"マイチケット", title_favorites:"お気に入り", title_menu:"メニュー", title_search:"イベントをさがす",
+    title_account:"アカウント設定", title_appmode:"アプリモード",
+    myevents:"参加予定", notifications:"お知らせ", settings:"設定", account:"アカウント", contact:"お問い合わせ", help:"ヘルプ・お問い合わせ",
+    language:"Language / 言語", login:"ログイン", signup:"新規登録", logout:"ログアウト", reset:"再設定",
+    guest:"ゲストさん", loading:"読み込み中…",
+    cam_permission:"カメラの使用が許可されていません。ブラウザの設定からカメラへのアクセスを許可してください。",
+    cam_insecure:"安全な接続（HTTPS）が必要です。HTTPSのページからアクセスしてください。",
+    cam_notfound:"利用できるカメラが見つかりません。",
+    cam_library:"QRコード読み取りライブラリを読み込めませんでした。通信環境をご確認のうえ、再試行してください。",
+    cam_unsupported:"このブラウザ・端末ではカメラ読み取りに対応していません。",
+    cam_other:"カメラを起動できませんでした。もう一度お試しください。",
+    cam_retry:"🔄 カメラを再試行",
+    ticket_id_label:"チケットIDを入力", ticket_id_verify:"確認",
+    checkin_ok_title:"✅ 入場できます", checkin_ok_desc:"チェックインが完了しました。",
+    checkin_used_title:"⚠ 使用済みのチケットです。",
+    checkin_invalid_title:"❌ 無効なチケットです。",
+  },
+  en: {
+    nav_home:"Home", nav_search:"Search", nav_tickets:"Tickets", nav_favorites:"Favorites", nav_menu:"Menu",
+    title_mytickets:"My Tickets", title_favorites:"Favorites", title_menu:"Menu", title_search:"Search Events",
+    title_account:"Account Settings", title_appmode:"App Mode",
+    myevents:"My Events", notifications:"Notifications", settings:"Settings", account:"Account", contact:"Contact", help:"Help & Contact",
+    language:"Language / 言語", login:"Log In", signup:"Sign Up", logout:"Log Out", reset:"Reset",
+    guest:"Guest", loading:"Loading…",
+    cam_permission:"Camera access is not allowed. Please enable camera permission in your browser settings.",
+    cam_insecure:"A secure HTTPS connection is required to use the camera.",
+    cam_notfound:"No available camera was found.",
+    cam_library:"Could not load the QR scanning library. Please check your connection and try again.",
+    cam_unsupported:"This browser or device does not support camera scanning.",
+    cam_other:"Unable to start the camera. Please try again.",
+    cam_retry:"🔄 Retry Camera",
+    ticket_id_label:"Enter Ticket ID", ticket_id_verify:"Verify",
+    checkin_ok_title:"✅ Check-in Successful", checkin_ok_desc:"The ticket has been checked in.",
+    checkin_used_title:"⚠ This ticket has already been used.",
+    checkin_invalid_title:"❌ Invalid Ticket.",
+  },
+};
+function loadLang(){ try{ return localStorage.getItem('inpass_lang') || 'ja'; }catch(e){ return 'ja'; } }
+function saveLang(l){ try{ localStorage.setItem('inpass_lang', l); }catch(e){} }
+function t(key){ const d = I18N[S.lang]||I18N.ja; return (d && d[key]!=null) ? d[key] : (I18N.ja[key]||key); }
+
+const CATS = ["すべて","お祭り","スポーツ","学校行事","音楽","グルメ","展示会","マルシェ","その他"];
+const CAT_EMOJI = {"お祭り":"🏮","スポーツ":"🏆","学校行事":"🎓","音楽":"🎵","グルメ":"🍡","展示会":"🖼️","マルシェ":"🛍️","その他":"✨"};
+const CAT_COLOR = {
+  "お祭り":["#FFD9CE","#FF6F51"],
+  "スポーツ":["#DBF3EF","#1B9E92"],
+  "学校行事":["#E3EFFC","#5B9BD9"],
+  "音楽":["#F4E3FF","#9B6BD6"],
+  "グルメ":["#FFEFD1","#E5A427"],
+  "展示会":["#E3EFFC","#5B9BD9"],
+  "マルシェ":["#DBF3EF","#1B9E92"],
+  "その他":["#F1E6DA","#8A7A6D"],
+};
+function heroStyle(cat){const c=CAT_COLOR[cat]||CAT_COLOR["その他"];return `background:linear-gradient(135deg,${c[0]},${c[1]}55);color:${c[1]};`;}
+
+const SEED_EVENTS = [
+  {
+    id:"ev1", name:"○○太鼓祭り2026", category:"お祭り",
+    dateStart:"2026-08-08", dateEnd:"2026-08-09", startTime:"09:00", endTime:"18:00",
+    venue:"○○市 ○○公園周辺", region:"○○市", lat:35.6812, lng:139.7671,
+    organizer:"○○太鼓祭り実行委員会",
+    catch:"夜空に響く、力強い太鼓の音。",
+    desc:"地域の伝統と情熱が詰まった太鼓祭り。2日間にわたり、迫力ある演奏や子ども向けイベント、屋台グルメが会場を彩ります。フィナーレの大合奏はお見逃しなく。",
+    days:["8/8(土)","8/9(日)"],
+    schedule:{
+      "8/8(土)":[
+        {t:"09:00",title:"オープニングセレモニー",sub:"メインステージ"},
+        {t:"10:00",title:"太鼓演奏①",sub:"地元保存会による奉納演奏"},
+        {t:"11:30",title:"子どもイベント",sub:"太鼓たいけんコーナー"},
+        {t:"13:00",title:"メインイベント",sub:"招待チーム演奏"},
+        {t:"14:30",title:"ステージイベント",sub:"よさこい演舞"},
+        {t:"16:00",title:"1日目フィナーレ",sub:"提灯パレード"},
+      ],
+      "8/9(日)":[
+        {t:"09:30",title:"朝市オープン",sub:"飲食エリア"},
+        {t:"11:00",title:"太鼓演奏②",sub:"ゲストチーム演奏"},
+        {t:"13:30",title:"お楽しみ抽選会",sub:"メインステージ"},
+        {t:"15:00",title:"太鼓演奏③",sub:"合同演奏"},
+        {t:"16:30",title:"フィナーレ",sub:"大合奏・花火"},
+      ],
+    },
+    notices:[
+      {title:"交通規制のお知らせ",date:"8/2",body:"8/8・8/9は会場周辺で交通規制を実施します。公共交通機関をご利用ください。",important:true},
+      {title:"熱中症にご注意ください",date:"8/1",body:"当日は気温上昇が予想されます。こまめな水分補給を心がけてください。",important:false},
+      {title:"シャトルバス運行のお知らせ",date:"7/30",body:"○○駅から会場まで無料シャトルバスを運行します。10分間隔で運行予定です。",important:false},
+      {title:"会場マップを更新しました",date:"7/28",body:"救護所の位置を変更しました。最新のマップをご確認ください。",important:false},
+      {title:"出店情報を公開しました",date:"7/25",body:"飲食エリアに出店する20店舗の情報を公開しました。フォトページもご覧ください。",important:false},
+    ],
+    congestionSpots:["ステージエリア","飲食エリア","駐車場","シャトルバス乗り場","トイレ"],
+    mapPins:[
+      {x:150,y:70,type:"stage",label:"メインステージ",info:"太鼓演奏が行われるメイン会場です。"},
+      {x:60,y:150,type:"toilet",label:"トイレ",info:"多目的トイレを含む3か所を設置。"},
+      {x:280,y:190,type:"parking",label:"駐車場",info:"一般車両500台収容。満車になり次第締切。"},
+      {x:230,y:60,type:"bike",label:"駐輪場",info:"自転車・バイク専用の駐輪スペース。"},
+      {x:100,y:220,type:"aid",label:"救護所",info:"看護師が常駐。体調不良の際はこちらへ。"},
+      {x:190,y:250,type:"gate",label:"出入口",info:"会場のメインゲートです。"},
+      {x:320,y:110,type:"bus",label:"シャトルバス乗り場",info:"○○駅行き無料シャトルバスの乗降場所。"},
+      {x:130,y:130,type:"food",label:"飲食エリア",info:"20店舗の屋台が並ぶグルメスポット。"},
+      {x:250,y:230,type:"info",label:"案内所",info:"落とし物・お困りごとはこちらへ。"},
+      {x:190,y:150,type:"reception",label:"受付",info:"チケットの確認・入場受付はこちらです。"},
+    ],
+    heat:{temp:34.6,humidity:65,wbgt:29,level:"警戒",notes:["こまめに水分補給をしましょう","帽子や日傘を活用しましょう","無理をせず休憩をとりましょう"]},
+    photos:[
+      {cat:"ステージ",emoji:"🥁"},{cat:"ステージ",emoji:"🎆"},{cat:"その他",emoji:"🏮"},
+      {cat:"ステージ",emoji:"🎉"},{cat:"その他",emoji:"🍡"},{cat:"ステージ",emoji:"🥁"},
+      {cat:"その他",emoji:"👘"},{cat:"ステージ",emoji:"✨"},{cat:"その他",emoji:"🎇"},
+    ],
+    ticketTypes:[
+      {id:"tt1",name:"1日券（8/8）",price:0,note:"8月8日のみ入場可能"},
+      {id:"tt2",name:"1日券（8/9）",price:0,note:"8月9日のみ入場可能"},
+      {id:"tt3",name:"通し券（2日間）",price:0,note:"8/8・8/9両日入場可能"},
+    ],
+  },
+  {
+    id:"ev2", name:"△△花火大会2026", category:"お祭り",
+    dateStart:"2026-08-16", dateEnd:"2026-08-16", startTime:"17:00", endTime:"21:00",
+    venue:"△△海浜公園", region:"△△市", lat:34.6937, lng:135.5023,
+    organizer:"△△市観光協会",
+    catch:"夜空を染める、一万発の大輪。",
+    desc:"海を舞台にした本格的な花火大会。音楽と花火が織りなす演出プログラムが見どころです。",
+    days:["8/16(日)"],
+    schedule:{"8/16(日)":[
+      {t:"17:00",title:"屋台オープン",sub:"会場入口周辺"},
+      {t:"19:00",title:"花火打ち上げ開始",sub:"海浜エリア"},
+      {t:"20:15",title:"フィナーレ大玉連発",sub:"海浜エリア"},
+    ]},
+    notices:[{title:"開催時間変更のお知らせ",date:"8/5",body:"荒天が予想される場合、開始時刻を変更する場合があります。",important:false}],
+    congestionSpots:["観覧エリア","飲食エリア","駐車場"],
+    mapPins:[
+      {x:160,y:100,type:"stage",label:"観覧エリア",info:"花火がよく見えるメインエリアです。"},
+      {x:80,y:180,type:"toilet",label:"トイレ",info:"仮設トイレを複数設置しています。"},
+      {x:260,y:200,type:"parking",label:"駐車場",info:"周辺駐車場は限りがあります。"},
+    ],
+    heat:{temp:30.2,humidity:70,wbgt:27,level:"注意",notes:["こまめに水分補給をしましょう","夜間も気温・湿度にご注意ください"]},
+    photos:[{cat:"その他",emoji:"🎆"},{cat:"その他",emoji:"🌊"},{cat:"その他",emoji:"🎇"}],
+    ticketTypes:[{id:"tt1",name:"入場チケット",price:0,note:"当日入場可能"}],
+  },
+  {
+    id:"ev3", name:"○○マルシェ", category:"マルシェ",
+    dateStart:"2026-08-23", dateEnd:"2026-08-23", startTime:"10:00", endTime:"16:00",
+    venue:"○○市役所前広場", region:"○○市", lat:35.1815, lng:136.9066,
+    organizer:"○○マルシェ運営事務局",
+    catch:"作り手と出会う、休日のマルシェ。",
+    desc:"地元農家や職人による出店が並ぶマルシェイベント。採れたて野菜やハンドメイド雑貨をお楽しみください。",
+    days:["8/23(日)"],
+    schedule:{"8/23(日)":[
+      {t:"10:00",title:"マルシェオープン",sub:"広場全体"},
+      {t:"12:00",title:"ワークショップ",sub:"子ども向け体験コーナー"},
+      {t:"16:00",title:"クローズ",sub:""},
+    ]},
+    notices:[{title:"駐車場について",date:"8/10",body:"会場周辺に専用駐車場はございません。公共交通機関をご利用ください。",important:false}],
+    congestionSpots:["出店エリア","休憩スペース"],
+    mapPins:[
+      {x:140,y:110,type:"stage",label:"出店エリア",info:"約40店舗が並びます。"},
+      {x:230,y:170,type:"info",label:"案内所",info:"マップの配布・お問い合わせはこちら。"},
+    ],
+    heat:{temp:32.0,humidity:60,wbgt:28,level:"注意",notes:["日陰にある休憩スペースをご活用ください"]},
+    photos:[{cat:"その他",emoji:"🥕"},{cat:"その他",emoji:"🧺"},{cat:"その他",emoji:"🌻"}],
+    ticketTypes:[{id:"tt1",name:"入場チケット",price:0,note:"入場無料・出入り自由"}],
+  },
+  {
+    id:"ev4", name:"秋の学園祭2026", category:"学校行事",
+    dateStart:"2026-10-10", dateEnd:"2026-10-11", startTime:"09:30", endTime:"16:00",
+    venue:"○○高等学校", region:"○○市", lat:35.0116, lng:135.7681,
+    organizer:"○○高等学校 生徒会",
+    catch:"青春がぎゅっと詰まった二日間。",
+    desc:"クラス企画・部活動の発表・模擬店など、生徒たちが作り上げる学園祭。誰でも見学可能です。",
+    days:["10/10(土)","10/11(日)"],
+    schedule:{"10/10(土)":[{t:"09:30",title:"開会式",sub:"体育館"},{t:"13:00",title:"吹奏楽部演奏",sub:"体育館ステージ"}],"10/11(日)":[{t:"10:00",title:"クラス企画公開",sub:"各教室"},{t:"15:00",title:"閉会式",sub:"体育館"}]},
+    notices:[{title:"来場者の受付について",date:"9/20",body:"正門にて受付名簿へのご記入をお願いします。",important:false}],
+    congestionSpots:["体育館","模擬店エリア"],
+    mapPins:[{x:150,y:100,type:"stage",label:"体育館",info:"各種発表が行われます。"},{x:230,y:180,type:"food",label:"模擬店エリア",info:"生徒による模擬店が並びます。"}],
+    heat:{temp:24.5,humidity:55,wbgt:21,level:"注意なし",notes:["過ごしやすい気候が予想されます"]},
+    photos:[{cat:"その他",emoji:"🎓"},{cat:"その他",emoji:"🎨"},{cat:"その他",emoji:"🎻"}],
+    ticketTypes:[{id:"tt1",name:"入場チケット",price:0,note:"どなたでも入場可能"}],
+  },
+  {
+    id:"ev5", name:"シティ音楽フェス2026", category:"音楽",
+    dateStart:"2026-09-05", dateEnd:"2026-09-05", startTime:"11:00", endTime:"21:00",
+    venue:"○○中央公園 特設ステージ", region:"○○市", lat:43.0618, lng:141.3545,
+    organizer:"シティ音楽フェス実行委員会",
+    catch:"街に音楽があふれる一日。",
+    desc:"地元アーティストから話題のバンドまで、多彩なラインナップが集結する野外音楽フェス。",
+    days:["9/5(土)"],
+    schedule:{"9/5(土)":[{t:"11:00",title:"開場",sub:"特設ステージ"},{t:"12:00",title:"OPENINGアクト",sub:""},{t:"18:00",title:"トリ登場",sub:""}]},
+    notices:[{title:"荷物検査について",date:"8/25",body:"入場時に手荷物検査を実施します。ご協力をお願いします。",important:false}],
+    congestionSpots:["ステージ前","飲食エリア"],
+    mapPins:[{x:160,y:110,type:"stage",label:"特設ステージ",info:"全アーティストが出演します。"},{x:240,y:190,type:"food",label:"飲食エリア",info:"キッチンカーが多数出店。"}],
+    heat:{temp:29.8,humidity:58,wbgt:26,level:"注意",notes:["屋外イベントのため水分補給をお忘れなく"]},
+    photos:[{cat:"ステージ",emoji:"🎸"},{cat:"ステージ",emoji:"🎤"},{cat:"その他",emoji:"🎶"}],
+    ticketTypes:[{id:"tt1",name:"入場チケット",price:0,note:"整理券制・先着順"}],
+  },
+];
+
+/* working copy of the seed data — mutated in place by the localStorage
+   persistence layer below, or replaced by imported/created events */
+let EVENTS = SEED_EVENTS.map(e=>JSON.parse(JSON.stringify(e)));
+
+/* ---------- Global mutable state ---------- */
+const CONGESTION_LEVELS = ["空いています","やや混雑","混雑"];
+const S = {
+  mode: "user", // user | admin | staff
+  view: "home",
+  eventId: null,
+  detailTab: "概要",
+  selectedDay: null,
+  favorites: new Set(),
+  tickets: [],
+  notices: {}, // eventId -> array
+  congestion: {}, // eventId -> {spot:{level, updatedAt}}
+  photos: {}, // eventId -> array of {id,imageUrl,caption}
+  photoUploadPct: null,
+  searchQuery:{keyword:"",name:"",region:"",date:"",category:"すべて"},
+  adminView:"dashboard",
+  adminEditingEventId:"ev1",
+  staffScanState:"idle", // idle | scanning | result
+  staffResult:null,
+  photoFilter:"すべて",
+  toastMsg:null,
+  ticketDetailId:null,
+  mapPopup:null,
+  // --- auth / local-account state ---
+  currentUser: null,       // {uid,email,name}
+  userRole: "guest",       // guest | user | organizer | staff
+  authLoading: false,
+  authError: "",
+  showAuthModal: null,     // 'login' | 'signup' | 'reset' | null
+  loadingEvents: true,
+  busy: {},                // per-action loading flags, e.g. busy.issueTicket
+  showNewEventForm: false,
+  newEventError: "",
+  storageOK: true,         // false if localStorage is unavailable (private browsing 等)
+  // --- new feature state ---
+  userLocation: null,      // {lat,lng} once geolocation permission granted
+  geoStatus: "unknown",    // unknown | granted | denied | unsupported | loading
+  notifPermission: (typeof Notification!=="undefined" ? Notification.permission : "unsupported"),
+  showDeleteAccountConfirm: false,
+  cameraStream: null,
+  scanRAF: null,
+  scanError: null,
+  weatherCache: {},        // eventId -> {temp, desc, loading, error}
+  adminMapSpotDraft: null, // {x,y,type,label,info} while adding a new map spot in admin
+  staffList: {},           // eventId -> {loading, rows} for cloud-mode staff management
+  staffAssignError: "",
+  lang: loadLang(),
+  cameraList: [],          // enumerated video input devices (populated after first permission grant)
+  preferredCameraId: null,
+  scanErrorCode: null,
+  showAppModeChooser: false,
+  appModePasswordError: "",
+  pendingAppMode: null,
+  devModeUnlocked: null, // 'organizer' | 'staff' | null — テスト用パスワードで一時的に有効化された権限
+  showLangPicker: false,
+  avatarUploadPct: null,
+  showReturnToUserConfirm: false,
+  debugPanelOn: (function(){ try{ return new URLSearchParams(location.search).get('debug')==='1'; }catch(e){ return false; } })(),
+  debugInfo: {},
+  verifyingTicketId: null,
+};
+
+function getEvent(id){return EVENTS.find(e=>e.id===id);}
+
+/* =================================================================
+   DATA LAYER — Firebaseなし。すべてブラウザの localStorage に保存する。
+   EP コントローラは常に下記の DATA.* 経由でデータ操作を行う
+   （インターフェースを保つことで、将来サーバーを追加する場合も
+   このレイヤーだけ差し替えればよい構成にしている）。
+================================================================== */
+const LS_PREFIX = "inpass_v1_";
+const LS_KEYS = {
+  users:LS_PREFIX+"users", session:LS_PREFIX+"session", events:LS_PREFIX+"events",
+  tickets:LS_PREFIX+"tickets", favorites:LS_PREFIX+"favorites", notices:LS_PREFIX+"notices",
+  congestion:LS_PREFIX+"congestion", photos:LS_PREFIX+"photos", checkins:LS_PREFIX+"checkins",
+};
+function lsGet(key, fallback){
+  try{ const raw = localStorage.getItem(key); return raw?JSON.parse(raw):fallback; }
+  catch(e){ return fallback; }
+}
+function lsSet(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch(e){ S.storageOK=false; return false; }
+}
+function simpleHash(pw){
+  // 本格的な暗号学的ハッシュではありません。サーバーを持たないローカル版の
+  // 簡易的な難読化です（README にその旨明記）。
+  let h=0; for(let i=0;i<pw.length;i++){h=(h*31+pw.charCodeAt(i))>>>0;}
+  return "h"+h.toString(36);
+}
+function nowStamp(){
+  const d=new Date();
+  return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+function fmtTimestamp(ts){ return ts||""; }
+
+const LOCAL_DATA = {
+  async init(){
+    // 保存済みのイベント（主催者が作成したもの）があれば読み込み、なければ初期データを保存
+    const savedEvents = lsGet(LS_KEYS.events, null);
+    if(savedEvents && Array.isArray(savedEvents) && savedEvents.length){
+      EVENTS.splice(0, EVENTS.length, ...savedEvents);
+    }else{
+      lsSet(LS_KEYS.events, EVENTS);
+    }
+    EVENTS.forEach(ev=>{
+      const allNotices = lsGet(LS_KEYS.notices, {});
+      S.notices[ev.id] = allNotices[ev.id] || ev.notices.map((n,i)=>({...n, id:ev.id+"-n"+i}));
+      const allCongestion = lsGet(LS_KEYS.congestion, {});
+      if(allCongestion[ev.id]){ S.congestion[ev.id] = allCongestion[ev.id]; }
+      else{
+        const c = {};
+        ev.congestionSpots.forEach((sp,i)=>{ c[sp] = {level:i%3, updatedAt:null}; });
+        S.congestion[ev.id] = c;
+      }
+      const allPhotos = lsGet(LS_KEYS.photos, {});
+      S.photos[ev.id] = allPhotos[ev.id] || [];
+    });
+    LOCAL_DATA.persistNotices(); LOCAL_DATA.persistCongestion(); LOCAL_DATA.persistPhotos();
+
+    // セッション復元
+    const session = lsGet(LS_KEYS.session, null);
+    if(session && session.uid){
+      const user = LOCAL_DATA.findUserByUid(session.uid);
+      if(user){
+        S.currentUser = {uid:user.uid, email:user.email, name:user.name, notificationEnabled:user.notificationEnabled!==false};
+        S.userRole = user.role || "user";
+        LOCAL_DATA.loadFavorites(user.uid);
+        LOCAL_DATA.loadTickets(user.uid);
+      }
+    }
+    S.loadingEvents = false;
+    render();
+  },
+
+  persistEvents(){ lsSet(LS_KEYS.events, EVENTS); },
+  persistNotices(){ lsSet(LS_KEYS.notices, S.notices); },
+  persistCongestion(){ lsSet(LS_KEYS.congestion, S.congestion); },
+  persistPhotos(){ lsSet(LS_KEYS.photos, S.photos); },
+  persistTickets(){ lsSet(LS_KEYS.tickets, S.allTickets || []); },
+
+  getUsers(){ return lsGet(LS_KEYS.users, []); },
+  saveUsers(list){ lsSet(LS_KEYS.users, list); },
+  findUserByEmail(email){ return LOCAL_DATA.getUsers().find(u=>u.email.toLowerCase()===String(email).toLowerCase()); },
+  findUserByUid(uid){ return LOCAL_DATA.getUsers().find(u=>u.uid===uid); },
+
+  loadFavorites(uid){
+    const all = lsGet(LS_KEYS.favorites, {});
+    S.favorites = new Set(all[uid] || []);
+  },
+  loadTickets(uid){
+    const all = lsGet(LS_KEYS.tickets, []);
+    S.allTickets = all;
+    S.tickets = all.filter(t=>t.userId===uid);
+  },
+
+  /* ---- Auth ---- */
+  async signUp(email,password,name){
+    if(LOCAL_DATA.findUserByEmail(email)){ throw {code:"auth/email-already-in-use"}; }
+    if(!password || password.length<6){ throw {code:"auth/weak-password"}; }
+    const uid = "u_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const users = LOCAL_DATA.getUsers();
+    users.push({uid, email, name, role:"user", pw:simpleHash(password), createdAt:nowStamp(), notificationEnabled:true});
+    LOCAL_DATA.saveUsers(users);
+    S.currentUser = {uid, email, name, notificationEnabled:true}; S.userRole = "user";
+    lsSet(LS_KEYS.session, {uid});
+    LOCAL_DATA.loadFavorites(uid); LOCAL_DATA.loadTickets(uid);
+  },
+  async logIn(email,password){
+    const user = LOCAL_DATA.findUserByEmail(email);
+    if(!user || user.pw !== simpleHash(password)){ throw {code:"auth/wrong-password"}; }
+    S.currentUser = {uid:user.uid, email:user.email, name:user.name, notificationEnabled:user.notificationEnabled!==false}; S.userRole = user.role || "user";
+    lsSet(LS_KEYS.session, {uid:user.uid});
+    LOCAL_DATA.loadFavorites(user.uid); LOCAL_DATA.loadTickets(user.uid);
+  },
+  async logOut(){
+    S.currentUser = null; S.userRole = "guest";
+    S.favorites = new Set(); S.tickets = [];
+    try{ localStorage.removeItem(LS_KEYS.session); }catch(e){}
+  },
+  async setNotificationPref(uid, enabled){
+    const users = LOCAL_DATA.getUsers();
+    const u = users.find(x=>x.uid===uid);
+    if(u){ u.notificationEnabled = enabled; LOCAL_DATA.saveUsers(users); }
+    if(S.currentUser && S.currentUser.uid===uid) S.currentUser.notificationEnabled = enabled;
+  },
+  async deleteAccount(uid){
+    // ユーザー情報を削除
+    const users = LOCAL_DATA.getUsers().filter(u=>u.uid!==uid);
+    LOCAL_DATA.saveUsers(users);
+    // このユーザーのお気に入りを削除
+    const favs = lsGet(LS_KEYS.favorites, []).filter(f=>f.userId!==uid);
+    lsSet(LS_KEYS.favorites, favs);
+    // このユーザーのチケットを削除（主催者側の集計に必要な checkins ログは残す）
+    const tickets = lsGet(LS_KEYS.tickets, []).filter(t=>t.userId!==uid);
+    lsSet(LS_KEYS.tickets, tickets);
+    // セッションを終了
+    try{ localStorage.removeItem(LS_KEYS.session); }catch(e){}
+    S.currentUser = null; S.userRole = "guest";
+    S.favorites = new Set(); S.tickets = []; S.allTickets = tickets;
+  },
+  async resetPassword(email, newPassword){
+    const user = LOCAL_DATA.findUserByEmail(email);
+    if(!user){ throw {code:"auth/user-not-found"}; }
+    if(!newPassword || newPassword.length<6){ throw {code:"auth/weak-password"}; }
+    const users = LOCAL_DATA.getUsers();
+    const u = users.find(x=>x.uid===user.uid);
+    u.pw = simpleHash(newPassword);
+    LOCAL_DATA.saveUsers(users);
+  },
+  async completePasswordReset(){ /* ローカルモードではメールリンク方式を使わないため呼ばれない */ },
+  async listStaff(){ return []; },
+  async assignStaff(){ throw {message:'スタッフ管理はクラウドモードでのみ利用できます。'}; },
+  async removeStaff(){ /* no-op */ },
+  /* デモ・検証用：このブラウザに保存された自分のロールを切り替える。
+     サーバーがないため「本物の権限管理」ではなく、あくまで動作確認用。 */
+  async devSetRole(role){
+    if(!S.currentUser) return;
+    const users = LOCAL_DATA.getUsers();
+    const u = users.find(x=>x.uid===S.currentUser.uid);
+    if(u){ u.role = role; LOCAL_DATA.saveUsers(users); S.userRole = role; }
+  },
+
+  /* ---- Favorites ---- */
+  async toggleFavorite(eventId, isFav){
+    const all = lsGet(LS_KEYS.favorites, {});
+    const uid = S.currentUser.uid;
+    const set = new Set(all[uid]||[]);
+    if(isFav) set.delete(eventId); else set.add(eventId);
+    all[uid] = Array.from(set);
+    lsSet(LS_KEYS.favorites, all);
+  },
+
+  /* ---- Tickets ---- */
+  async issueTicket(eventId, typeId, typeName){
+    const all = lsGet(LS_KEYS.tickets, []);
+    if(all.some(t=>t.userId===S.currentUser.uid && t.eventId===eventId)){
+      throw {code:"already-issued", message:"すでにこのイベントのチケットを取得しています。"};
+    }
+    const ticketId = "INP-"+new Date().getFullYear()+"-"+Math.random().toString(36).slice(2,10).toUpperCase();
+    all.unshift({id:ticketId, eventId, userId:S.currentUser.uid, typeId, typeName, status:"valid", issuedAt:nowStamp(), checkedInAt:null});
+    lsSet(LS_KEYS.tickets, all);
+    S.allTickets = all; S.tickets = all.filter(t=>t.userId===S.currentUser.uid);
+  },
+
+  /* ---- Organizer: events / notices / congestion / photos ---- */
+  async createEvent(payload){
+    const id = "ev-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    const newEv = {
+      id, name:payload.title, category:payload.category||"その他",
+      dateStart:payload.startDate, dateEnd:payload.endDate||payload.startDate,
+      startTime:payload.startTime||"10:00", endTime:payload.endTime||"17:00",
+      venue:payload.venue||"", region:(payload.prefecture||"")+(payload.city||""),
+      lat:payload.lat||null, lng:payload.lng||null,
+      organizer:S.currentUser.name||S.currentUser.email, catch:"", desc:payload.description||"",
+      status:"published", organizerId:S.currentUser.uid,
+      days:[payload.startDate], schedule:{[payload.startDate]:[]}, notices:[], congestionSpots:[],
+      mapPins:[], heat:{temp:"-",humidity:"-",wbgt:"-",level:"情報なし",notes:[]}, photos:[],
+      ticketTypes:[{id:"tt1",name:"入場チケット",price:0,note:payload.time||""}],
+    };
+    EVENTS.unshift(newEv);
+    S.notices[id]=[]; S.congestion[id]={}; S.photos[id]=[];
+    LOCAL_DATA.persistEvents(); LOCAL_DATA.persistNotices(); LOCAL_DATA.persistCongestion(); LOCAL_DATA.persistPhotos();
+    return {id};
+  },
+  async updateEventRemote(eventId, patch){
+    const ev = getEvent(eventId);
+    if(!ev) return;
+    if(patch.title!==undefined) ev.name = patch.title;
+    if(patch.description!==undefined) ev.desc = patch.description;
+    if(patch.category!==undefined) ev.category = patch.category;
+    if(patch.venue!==undefined) ev.venue = patch.venue;
+    if(patch.startDate!==undefined) ev.dateStart = patch.startDate;
+    if(patch.endDate!==undefined) ev.dateEnd = patch.endDate;
+    LOCAL_DATA.persistEvents();
+  },
+  async postAnnouncement(eventId,title,body,important){
+    S.notices[eventId] = S.notices[eventId]||[];
+    S.notices[eventId].unshift({id:uid("n"),title,body,important,date:nowStamp()});
+    LOCAL_DATA.persistNotices();
+  },
+  async removeAnnouncementRemote(eventId,noticeId){
+    S.notices[eventId] = (S.notices[eventId]||[]).filter(n=>n.id!==noticeId);
+    LOCAL_DATA.persistNotices();
+  },
+  async setCrowdStatus(eventId,locationId,level){
+    S.congestion[eventId] = S.congestion[eventId]||{};
+    S.congestion[eventId][locationId] = {level, updatedAt:nowStamp()};
+    LOCAL_DATA.persistCongestion();
+  },
+  async uploadPhoto(eventId,file,onProgress){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      let pct=0;
+      const timer = setInterval(()=>{ pct=Math.min(90,pct+30); onProgress && onProgress(pct); }, 150);
+      reader.onload = ()=>{
+        clearInterval(timer); onProgress && onProgress(100);
+        S.photos[eventId] = S.photos[eventId]||[];
+        S.photos[eventId].unshift({id:uid("p"), imageUrl:reader.result, caption:""});
+        const ok = LOCAL_DATA.persistPhotos();
+        if(!ok){ reject({code:"storage-unavailable"}); return; }
+        resolve(reader.result);
+      };
+      reader.onerror = ()=>{ clearInterval(timer); reject({message:"画像の読み込みに失敗しました。"}); };
+      reader.readAsDataURL(file);
+    });
+  },
+  async uploadAvatar(){ throw {message: S.lang==='en' ? 'Profile photos require cloud mode.' : 'プロフィール画像の変更にはクラウドモードが必要です。'}; },
+  async removeAvatar(){ /* ローカルモードでは常に未設定のため何もしない */ },
+
+  /* ---- Check-in（このブラウザ内で完結。サーバーがないため、他の
+     デバイスからの二重チェックインは防げない点に注意 — README参照） ---- */
+  async checkInTicket(ticketId, eventId){
+    const all = lsGet(LS_KEYS.tickets, []);
+    const t = all.find(x=>x.id===ticketId);
+    if(!t){ return {status:"invalid", ticketId}; }
+    if(t.eventId !== eventId){ return {status:"invalid", ticketId}; }
+    if(t.status==="used"){ return {status:"used", ticketId, typeName:t.typeName}; }
+    t.status="used"; t.checkedInAt=nowStamp();
+    lsSet(LS_KEYS.tickets, all);
+    const checkins = lsGet(LS_KEYS.checkins, []);
+    checkins.unshift({ticketId, eventId, userId:t.userId, staffId:S.currentUser?S.currentUser.uid:null, checkedInAt:nowStamp()});
+    lsSet(LS_KEYS.checkins, checkins);
+    S.allTickets = all;
+    if(S.currentUser) S.tickets = all.filter(x=>x.userId===S.currentUser.uid);
+    return {status:"ok", ticketId, typeName:t.typeName};
+  },
+};
+
+/* =================================================================
+   CLOUD_DATA — Supabase（Postgres + Auth + Storage + Realtime）版。
+   supabaseConfig が設定されている場合のみ使用される。
+   LOCAL_DATA と同じメソッド名・引数で実装することで、EP コントローラ
+   側のコードを変更せずに切り替えられるようにしている。
+================================================================== */
+function rowToEvent(r){
+  return {
+    id: r.id, name: r.title, category: r.category || "その他",
+    dateStart: r.start_date, dateEnd: r.end_date || r.start_date,
+    startTime: r.start_time ? String(r.start_time).slice(0,5) : "09:00",
+    endTime: r.end_time ? String(r.end_time).slice(0,5) : "18:00",
+    venue: r.venue || "", region: (r.prefecture||"")+(r.city||""),
+    lat: r.lat, lng: r.lng,
+    organizer: r.organizer_name || "", organizerId: r.organizer_id,
+    catch: r.tagline || "", desc: r.description || "", status: r.status || "published",
+    days: (r.days && r.days.length) ? r.days : [r.start_date],
+    schedule: r.schedule || {}, notices: [], congestionSpots: r.congestion_spots || [],
+    mapPins: r.map_pins || [], heat: r.heat || {temp:"-",humidity:"-",wbgt:"-",level:"情報なし",notes:[]},
+    photos: [], ticketTypes: (r.ticket_types && r.ticket_types.length) ? r.ticket_types : [{id:"tt1",name:"入場チケット",price:0,note:""}],
+  };
+}
+function rowToTicket(r){
+  return {
+    id: r.ticket_code, eventId: r.event_id, typeId: r.ticket_type, typeName: r.ticket_type_name,
+    status: r.status, issuedAt: fmtTimestamp(r.issued_at), userId: r.user_id,
+  };
+}
+
+const CLOUD_DATA = {
+  _channels: [],
+  async init(){
+    const ok = await bootSupabase();
+    if(!ok || !sb){
+      toast('Supabaseへの接続に失敗しました。設定（supabaseConfig）をご確認ください。');
+      EVENTS.splice(0, EVENTS.length, ...SEED_EVENTS.map(e=>JSON.parse(JSON.stringify(e))));
+      EVENTS.forEach(ev=>{ S.notices[ev.id]=ev.notices.map((n,i)=>({...n,id:ev.id+'-n'+i})); S.congestion[ev.id]={}; S.photos[ev.id]=[]; });
+      S.loadingEvents = false; render();
+      return;
+    }
+    sb.auth.onAuthStateChange(async (event, session)=>{
+      if(event === 'PASSWORD_RECOVERY'){ S.showAuthModal='newPassword'; S.authError=''; render(); return; }
+      if(event === 'SIGNED_OUT'){ S.currentUser=null; S.userRole='guest'; S.favorites=new Set(); S.tickets=[]; render(); return; }
+      if(session && session.user && (!S.currentUser || S.currentUser.uid!==session.user.id)){
+        await CLOUD_DATA._loadProfile(session.user); render();
+      }
+    });
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session && session.user){ await CLOUD_DATA._loadProfile(session.user); }
+
+    await CLOUD_DATA.refreshEvents();
+    CLOUD_DATA._subscribeRealtime();
+    S.loadingEvents = false;
+    render();
+  },
+  async _loadProfile(user){
+    let { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if(!data) data = { id:user.id, name:user.user_metadata?.name||'', role:'user', notification_enabled:true, avatar_url:null };
+    S.currentUser = { uid:user.id, email:user.email, name:data.name, notificationEnabled:data.notification_enabled!==false, avatarUrl:data.avatar_url||null };
+    S.userRole = data.role || 'user';
+    await CLOUD_DATA.loadFavorites(user.id);
+    await CLOUD_DATA.loadTickets(user.id);
+  },
+  _subscribeRealtime(){
+    const on = (name,table,fn)=> sb.channel(name).on('postgres_changes',{event:'*',schema:'public',table}, fn).subscribe();
+    CLOUD_DATA._channels = [
+      on('rt-events','events', ()=>CLOUD_DATA.refreshEvents()),
+      on('rt-announcements','announcements', ()=>CLOUD_DATA.refreshAnnouncements()),
+      on('rt-crowd','crowd_status', ()=>CLOUD_DATA.refreshCrowdStatus()),
+      on('rt-photos','photos', ()=>CLOUD_DATA.refreshPhotos()),
+      on('rt-tickets','tickets', ()=>{ if(S.currentUser) CLOUD_DATA.loadTickets(S.currentUser.uid).then(render); }),
+    ];
+  },
+  async refreshEvents(){
+    const { data, error } = await sb.from('events').select('*').order('start_date',{ascending:true});
+    if(error){ console.error(error); return; }
+    EVENTS.splice(0, EVENTS.length, ...(data||[]).map(rowToEvent));
+    await CLOUD_DATA.refreshAnnouncements();
+    await CLOUD_DATA.refreshCrowdStatus();
+    await CLOUD_DATA.refreshPhotos();
+    render();
+  },
+  async refreshAnnouncements(){
+    const { data, error } = await sb.from('announcements').select('*').order('created_at',{ascending:false});
+    if(error) return;
+    const byEvent = {};
+    (data||[]).forEach(r=>{ (byEvent[r.event_id] = byEvent[r.event_id]||[]).push({id:r.id,title:r.title,body:r.body,important:r.priority==='high',date:fmtTimestamp(r.created_at)}); });
+    EVENTS.forEach(ev=>{ S.notices[ev.id] = byEvent[ev.id] || []; });
+    render();
+  },
+  async refreshCrowdStatus(){
+    const { data, error } = await sb.from('crowd_status').select('*');
+    if(error) return;
+    EVENTS.forEach(ev=>{
+      const init = {};
+      (ev.congestionSpots||[]).forEach((sp,i)=>{ init[sp] = {level:i%3, updatedAt:null}; });
+      S.congestion[ev.id] = init;
+    });
+    (data||[]).forEach(r=>{ S.congestion[r.event_id] = S.congestion[r.event_id]||{}; S.congestion[r.event_id][r.location_id] = {level:r.status, updatedAt:r.updated_at}; });
+    render();
+  },
+  async refreshPhotos(){
+    const { data, error } = await sb.from('photos').select('*').order('created_at',{ascending:false});
+    if(error) return;
+    const byEvent = {};
+    (data||[]).forEach(r=>{ (byEvent[r.event_id] = byEvent[r.event_id]||[]).push({id:r.id, imageUrl:r.image_url, caption:r.caption||''}); });
+    EVENTS.forEach(ev=>{ S.photos[ev.id] = byEvent[ev.id] || []; });
+    render();
+  },
+  async persistEvents(){
+    const ev = getEvent(S.adminEditingEventId);
+    if(!ev) return;
+    const { error } = await sb.from('events').update({ schedule: ev.schedule, map_pins: ev.mapPins, days: ev.days }).eq('id', ev.id);
+    if(error){ toast(friendlyError(error)); render(); }
+  },
+  persistNotices(){ /* announcements テーブルへ都度書き込むため不要 */ },
+  persistCongestion(){ /* crowd_status テーブルへ都度書き込むため不要 */ },
+  persistPhotos(){ /* photos テーブルへ都度書き込むため不要 */ },
+  getUsers(){ return []; }, saveUsers(){}, findUserByEmail(){ return null; }, findUserByUid(){ return null; },
+
+  async loadFavorites(uid){
+    const { data, error } = await sb.from('favorites').select('event_id').eq('user_id', uid);
+    S.favorites = error ? new Set() : new Set((data||[]).map(r=>r.event_id));
+  },
+  async loadTickets(uid){
+    const { data, error } = await sb.from('tickets').select('*');
+    const mapped = error ? [] : (data||[]).map(rowToTicket);
+    S.allTickets = mapped;
+    S.tickets = mapped.filter(t=>t.userId===uid);
+  },
+
+  /* ---- Auth（実メールを用いた本人確認） ---- */
+  async signUp(email, password, name){
+    const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ name } } });
+    if(error) throw error;
+    if(data.session && data.user){ await CLOUD_DATA._loadProfile(data.user); }
+    else { throw { message:"確認メールを送信しました。メール内のリンクから登録を完了してください。" }; }
+  },
+  async logIn(email, password){
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    await CLOUD_DATA._loadProfile(data.user);
+  },
+  async logOut(){
+    await sb.auth.signOut();
+    S.currentUser = null; S.userRole = 'guest'; S.favorites = new Set(); S.tickets = [];
+  },
+  async setNotificationPref(uid, enabled){
+    await sb.from('profiles').update({ notification_enabled: enabled }).eq('id', uid);
+    if(S.currentUser) S.currentUser.notificationEnabled = enabled;
+  },
+  async deleteAccount(uid){
+    await sb.from('favorites').delete().eq('user_id', uid);
+    await sb.from('tickets').delete().eq('user_id', uid);
+    await sb.from('profiles').delete().eq('id', uid);
+    await sb.auth.signOut();
+    S.currentUser = null; S.userRole = 'guest'; S.favorites = new Set(); S.tickets = [];
+  },
+  /* 安全なパスワード再設定：メール送信のみ行う（実際の変更はメール内リンク経由の別ステップ） */
+  async resetPassword(email){
+    const redirectTo = location.origin + location.pathname;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if(error) throw error;
+  },
+  async completePasswordReset(newPassword){
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if(error) throw error;
+  },
+  async devSetRole(){ toast('クラウドモードでは、ロールの変更は管理者のみ行えます（ブラウザから自分で変更することはできません）。'); },
+
+  async toggleFavorite(eventId, isFav){
+    const uid = S.currentUser.uid;
+    if(isFav){ await sb.from('favorites').delete().eq('user_id',uid).eq('event_id',eventId); }
+    else{ const { error } = await sb.from('favorites').insert({user_id:uid, event_id:eventId}); if(error) throw error; }
+  },
+
+  async issueTicket(eventId, typeId, typeName){
+    const ticketCode = "INP-"+new Date().getFullYear()+"-"+Math.random().toString(36).slice(2,10).toUpperCase();
+    const { error } = await sb.from('tickets').insert({
+      ticket_code:ticketCode, event_id:eventId, user_id:S.currentUser.uid,
+      ticket_type:typeId, ticket_type_name:typeName, status:'valid',
+    });
+    if(error){
+      if(error.code === '23505') throw {code:'already-issued', message:'すでにこのイベントのチケットを取得しています。'};
+      throw error;
+    }
+    await CLOUD_DATA.loadTickets(S.currentUser.uid);
+  },
+
+  async createEvent(payload){
+    const row = {
+      title:payload.title, description:payload.description||'', category:payload.category||'その他',
+      prefecture:payload.prefecture||'', city:payload.city||'', venue:payload.venue||'',
+      start_date:payload.startDate, end_date:payload.endDate||payload.startDate,
+      start_time:payload.startTime||'10:00', end_time:payload.endTime||'17:00',
+      lat:payload.lat||null, lng:payload.lng||null,
+      organizer_id:S.currentUser.uid, organizer_name:S.currentUser.name||S.currentUser.email,
+      status:'draft', days:[payload.startDate], schedule:{[payload.startDate]:[]},
+      ticket_types:[{id:'tt1',name:'入場チケット',price:0,note:payload.time||''}],
+      congestion_spots:[], map_pins:[], heat:{temp:'-',humidity:'-',wbgt:'-',level:'情報なし',notes:[]},
+    };
+    const { data, error } = await sb.from('events').insert(row).select().single();
+    if(error){
+      if(error.code==='42501' || /row-level security|policy/i.test(error.message||'')){
+        throw {code:'organizer-required', message:'イベントの作成には「主催者」権限が必要です。Supabaseの profiles テーブルで、ご自身の role を organizer（または admin）に変更してください。'};
+      }
+      throw error;
+    }
+    await CLOUD_DATA.refreshEvents();
+    return { id:data.id };
+  },
+  async updateEventRemote(eventId, patch){
+    const row = {};
+    if('title' in patch) row.title = patch.title;
+    if('description' in patch) row.description = patch.description;
+    if('category' in patch) row.category = patch.category;
+    if('venue' in patch) row.venue = patch.venue;
+    if('startDate' in patch) row.start_date = patch.startDate;
+    if('endDate' in patch) row.end_date = patch.endDate;
+    if('status' in patch) row.status = patch.status;
+    const { error } = await sb.from('events').update(row).eq('id', eventId);
+    if(error) throw error;
+    await CLOUD_DATA.refreshEvents();
+  },
+  async postAnnouncement(eventId, title, body, important){
+    const { error } = await sb.from('announcements').insert({event_id:eventId, title, body, priority: important?'high':'normal'});
+    if(error) throw error;
+  },
+  async removeAnnouncementRemote(eventId, noticeId){
+    const { error } = await sb.from('announcements').delete().eq('id', noticeId);
+    if(error) throw error;
+  },
+  async setCrowdStatus(eventId, locationId, level){
+    const { error } = await sb.from('crowd_status').upsert({event_id:eventId, location_id:locationId, status:level, updated_at:new Date().toISOString()});
+    if(error) throw error;
+  },
+  async uploadPhoto(eventId, file, onProgress){
+    onProgress && onProgress(10);
+    const path = `${eventId}/${Date.now()}_${file.name}`;
+    const { error:upErr } = await sb.storage.from('event-photos').upload(path, file, {upsert:false});
+    if(upErr) throw upErr;
+    onProgress && onProgress(70);
+    const { data:pub } = sb.storage.from('event-photos').getPublicUrl(path);
+    const { error } = await sb.from('photos').insert({event_id:eventId, image_url:pub.publicUrl, uploaded_by:S.currentUser.uid});
+    if(error) throw error;
+    onProgress && onProgress(100);
+    await CLOUD_DATA.refreshPhotos();
+  },
+
+  /* ---- プロフィール画像（avatarsバケット） ---- */
+  async uploadAvatar(uid, file, onProgress){
+    onProgress && onProgress(10);
+    const path = `${uid}/${Date.now()}_${file.name}`;
+    const { error:upErr } = await sb.storage.from('avatars').upload(path, file, {upsert:true});
+    if(upErr) throw upErr;
+    onProgress && onProgress(70);
+    const { data:pub } = sb.storage.from('avatars').getPublicUrl(path);
+    const { error } = await sb.from('profiles').update({avatar_url:pub.publicUrl}).eq('id', uid);
+    if(error) throw error;
+    onProgress && onProgress(100);
+    return pub.publicUrl;
+  },
+  async removeAvatar(uid){
+    const { error } = await sb.from('profiles').update({avatar_url:null}).eq('id', uid);
+    if(error) throw error;
+  },
+
+  /* ---- 安全なQRチェックイン：Postgres関数（SECURITY DEFINER）をRPC呼び出し ---- */
+  async checkInTicket(ticketCode, eventId){
+    const { data, error } = await sb.rpc('check_in_ticket', {p_ticket_code:ticketCode, p_event_id:eventId});
+    if(error) throw error;
+    return { status:data.status, ticketId:data.ticket_code, typeName:data.type_name };
+  },
+  /* ---- スタッフ管理（担当イベントの割り当て） ---- */
+  async assignStaff(eventId, email){
+    const { error } = await sb.rpc('assign_staff', {p_event_id:eventId, p_staff_email:email});
+    if(error) throw error;
+  },
+  async listStaff(eventId){
+    const { data, error } = await sb.rpc('list_event_staff', {p_event_id:eventId});
+    if(error){ console.error(error); return []; }
+    return data || [];
+  },
+  async removeStaff(eventId, staffId){
+    const { error } = await sb.rpc('remove_staff', {p_event_id:eventId, p_staff_id:staffId});
+    if(error) throw error;
+  },
+};
+
+const DATA = CLOUD_MODE ? CLOUD_DATA : LOCAL_DATA;
+
+function fmtRange(ev){
+  if(ev.dateStart===ev.dateEnd) return ev.dateStart.replace(/-/g,"/");
+  return ev.dateStart.replace(/-/g,"/") + " 〜 " + ev.dateEnd.slice(5).replace(/-/g,"/");
+}
+function uid(prefix){return prefix+Math.random().toString(36).slice(2,8).toUpperCase();}
+
+/* ---------- Event status / countdown / price / distance helpers ---------- */
+function getEventTimes(ev){
+  const start = new Date((ev.dateStart||"2026-01-01")+"T"+(ev.startTime||"09:00")+":00");
+  const end = new Date((ev.dateEnd||ev.dateStart||"2026-01-01")+"T"+(ev.endTime||"18:00")+":00");
+  return {start,end};
+}
+function computeEventStatus(ev){
+  const now = new Date();
+  const {start,end} = getEventTimes(ev);
+  if(now < start){
+    const sameDay = now.toDateString()===start.toDateString();
+    return sameDay ? {key:"today_before",label:"本日開催",cls:"badge-yellow"} : {key:"upcoming",label:"開催予定",cls:"badge-outline"};
+  }
+  if(now>=start && now<=end) return {key:"ongoing",label:"開催中",cls:"badge-green"};
+  return {key:"ended",label:"終了しました",cls:"badge-ended"};
+}
+function computeCountdownText(ev){
+  const now = new Date();
+  const {start,end} = getEventTimes(ev);
+  if(now>end) return "イベントは終了しました";
+  if(now>=start) return "開催中！";
+  const sameDay = now.toDateString()===start.toDateString();
+  if(sameDay) return "本日開催！";
+  const diffDays = Math.ceil((start-now)/86400000);
+  if(diffDays<=1) return "いよいよ明日！";
+  return `開催まであと${diffDays}日！`;
+}
+function formatPrice(price){
+  const n = typeof price==="number" ? price : parseInt(price,10);
+  if(!n || n<=0) return "無料";
+  return n.toLocaleString("ja-JP")+"円";
+}
+function haversineKm(lat1,lng1,lat2,lng2){
+  if([lat1,lng1,lat2,lng2].some(v=>v==null||isNaN(v))) return null;
+  const R=6371, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* ---------- Render root ---------- */
+function render(){
+  const root = document.getElementById('root');
+  // カメラで映像を映している最中は、画面全体の再描画（innerHTML差し替え）を行わない。
+  // 再描画すると <video> 要素ごと作り直されてしまい、せっかく取得した映像が
+  // 真っ黒になってしまうため（特にiPhoneで顕著）。裏側のデータ更新などは
+  // いったん保留し、スキャン終了後（resetScan/cancelScan等）に反映される。
+  if(S.cameraStream && S.staffScanState==='scanning'){
+    const slot = document.getElementById('cameraSwitcherSlot');
+    if(slot) slot.innerHTML = renderCameraSwitcherHTML();
+    return;
+  }
+  try{
+    let html = renderStatusBanners();
+    if(S.mode==='user') html += renderUserApp();
+    else if(S.mode==='admin' && canSwitchTo('organizer')) html += renderAdmin();
+    else if(S.mode==='staff' && canSwitchTo('staff')) html += renderStaff();
+    else { S.mode='user'; html += renderUserApp(); }
+
+    if(S.showAppModeChooser) html += renderAppModeChooser();
+    if(S.showLangPicker) html += renderLangPicker();
+    if(S.showAuthModal) html += renderAuthModal();
+    if(S.showSplash){
+      html += renderSplash();
+    }
+    root.innerHTML = html;
+    if(S.toastMsg){
+      setTimeout(()=>{S.toastMsg=null; renderToastOnly();},1800);
+    }
+    attachSplashTimer();
+  }catch(err){
+    console.error('render() failed:', err);
+    root.innerHTML = `<div style="max-width:430px;margin:60px auto;padding:28px;text-align:center;font-family:sans-serif;">
+      <div style="font-size:34px;margin-bottom:10px;">⚠️</div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:8px;">問題が発生しました / Something went wrong</div>
+      <div style="font-size:13px;color:#8A7A6D;margin-bottom:18px;">一時的な不具合が発生しました。再読み込みをお試しください。<br>A temporary error occurred. Please reload.</div>
+      <button onclick="location.reload()" style="background:#FF6F51;color:#fff;border:none;border-radius:999px;padding:12px 28px;font-weight:800;font-size:14px;">再読み込み / Reload</button>
+    </div>`;
+  }
+}
+function canSwitchTo(role){
+  if(role==='organizer') return ['organizer','admin'].includes(S.userRole) || S.devModeUnlocked==='organizer';
+  if(role==='staff') return ['staff','organizer','admin'].includes(S.userRole) || S.devModeUnlocked==='staff';
+  return true;
+}
+function renderToastOnly(){
+  const el = document.getElementById('toast-holder');
+  if(el) el.remove();
+}
+
+/* ---------- Splash ---------- */
+function renderSplash(){
+  const first = S.isFirstLaunch;
+  return `<div class="splash ${S.splashHide?'hide':''}" id="splashEl">
+    <svg class="splash-mark" viewBox="0 0 100 100" fill="none">
+      <rect x="8" y="24" width="84" height="52" rx="14" fill="#FF6F51"/>
+      <circle cx="8" cy="50" r="9" fill="var(--bg)"/>
+      <circle cx="92" cy="50" r="9" fill="var(--bg)"/>
+      <path d="M50 34l4.2 9 9.9.9-7.5 6.6 2.3 9.7L50 55l-8.9 5.2 2.3-9.7-7.5-6.6 9.9-.9L50 34z" fill="#FFC145"/>
+    </svg>
+    <div class="splash-word jp-display">
+      ${["イ","ン","パ","ス"].map((c,i)=>`<span style="animation-delay:${0.5+i*0.07}s">${c}</span>`).join('')}
+    </div>
+    <div class="splash-tag">イベントを、もっと身近に。</div>
+  </div>`;
+}
+function attachSplashTimer(){
+  if(!S.showSplash || S._splashTimerSet) return;
+  S._splashTimerSet = true;
+  const total = S.isFirstLaunch ? 2000 : 1300;
+  setTimeout(()=>{
+    S.splashHide = true;
+    const el = document.getElementById('splashEl');
+    if(el) el.classList.add('hide');
+  }, total-450);
+  setTimeout(()=>{
+    S.showSplash = false;
+    S._splashTimerSet = false;
+    sessionStorage.setItem('ep_visited','1');
+    render();
+  }, total);
+}
+
+/* ---------- User app ---------- */
+function renderUserApp(){
+  let body='';
+  if(S.view==='home') body = screenHome();
+  else if(S.view==='search') body = screenSearch();
+  else if(S.view==='detail') body = screenDetail();
+  else if(S.view==='mytickets') body = screenMyTickets();
+  else if(S.view==='favorites') body = screenFavorites();
+  else if(S.view==='menu') body = screenMenu();
+  else if(S.view==='account') body = screenAccount();
+  else body = screenHome();
+
+  const navItems = [
+    {v:'home',icon:'home',label:t('nav_home')},
+    {v:'search',icon:'search',label:t('nav_search')},
+    {v:'mytickets',icon:'ticket',label:t('nav_tickets')},
+    {v:'favorites',icon:'heart',label:t('nav_favorites')},
+    {v:'menu',icon:'menu',label:t('nav_menu')},
+  ];
+  const showNav = ['home','search','mytickets','favorites','menu'].includes(S.view);
+  return `<div class="phone-shell"><div class="phone-notch"></div>
+    <div class="screen" id="scr">${body}</div>
+    ${showNav?`<div class="bottom-nav">
+      ${navItems.map(n=>`<button class="nav-item ${S.view===n.v?'active':''}" onclick="EP.go('${n.v}')">${icon(n.icon)}<span>${n.label}</span></button>`).join('')}
+    </div>`:''}
+    ${S.toastMsg?`<div class="toast" id="toast-holder">${S.toastMsg}</div>`:''}
+    ${S.mapPopup?renderMapPopup():''}
+    ${S.showTicketModal?renderTicketPickModal():''}
+  </div>`;
+}
+
+function eventCard(ev,{wide=false}={}){
+  const fav = S.favorites.has(ev.id);
+  const status = computeEventStatus(ev);
+  let distText = "";
+  if(S.userLocation && ev.lat!=null && ev.lng!=null){
+    const km = haversineKm(S.userLocation.lat,S.userLocation.lng,ev.lat,ev.lng);
+    if(km!=null) distText = km<1 ? `${Math.round(km*1000)}m` : `${km.toFixed(1)}km`;
+  }
+  return `<div class="event-card ${wide?'wide':''}" onclick="EP.openEvent('${ev.id}')">
+    <div class="event-hero" style="${heroStyle(ev.category)}">
+      <span class="event-cat-chip">${CAT_EMOJI[ev.category]} ${ev.category}</span>
+      <button class="fav-toggle" onclick="event.stopPropagation();EP.toggleFav('${ev.id}')">${icon('heart')}</button>
+      <span>${CAT_EMOJI[ev.category]}</span>
+      <span class="badge ${status.cls} status-chip">${status.label}</span>
+    </div>
+    <div class="event-body">
+      <div class="event-name">${ev.name}</div>
+      <div class="event-meta">${icon('calendar')}${fmtRange(ev)}</div>
+      <div class="event-meta">${icon('pin')}${ev.venue}${distText?` ・ 現在地から約${distText}`:''}</div>
+    </div>
+  </div>`;
+}
+
+function screenHome(){
+  const header = `<div class="topbar">
+    <span class="jp-display" style="font-size:20px;font-weight:800;color:var(--coral)">インパス</span>
+    <button class="icon-btn" onclick="EP.go('menu')">${icon('bell')}</button>
+  </div>`;
+  if(S.loadingEvents){
+    return header + `<div style="padding:14px 18px;">
+      <div class="skeleton" style="height:110px;border-radius:20px;margin-bottom:20px;"></div>
+      <div class="skeleton" style="height:14px;width:120px;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:12px;">${[1,2,3].map(()=>`<div class="skeleton" style="height:190px;width:230px;flex-shrink:0;"></div>`).join('')}</div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--ink-faint);padding:14px;">読み込み中…</div>`;
+  }
+  if(!EVENTS.length){
+    return header + `<div class="empty-state"><div class="em">🎪</div>公開されているイベントはまだありません<br><span style="font-size:12px;">主催者管理画面からイベントを作成してみましょう</span></div>`;
+  }
+  const notEnded = EVENTS.filter(e=>computeEventStatus(e).key!=='ended');
+  const ended = EVENTS.filter(e=>computeEventStatus(e).key==='ended');
+  // 開催予定：開催日が近い順
+  const upcoming = [...notEnded].sort((a,b)=>getEventTimes(a).start-getEventTimes(b).start).slice(0,6);
+  // おすすめ：カテゴリーを散らして重複が少ないように選出（開催中・開催予定を優先、なければ終了分で補う）
+  const recommended = [...notEnded, ...ended].slice(0,6);
+  // 人気イベント：orgnizer-createdでない元祖サンプルを人気表示の代わりに（実データがないため、開催予定から別の並び順で選出）
+  const popular = [...notEnded].sort((a,b)=>a.name.localeCompare(b.name,'ja')).slice(0,6);
+  const featured = upcoming[0] || EVENTS[0];
+  const featuredStatus = computeEventStatus(featured);
+  const countdown = computeCountdownText(featured);
+
+  // 近くのイベント／おすすめの出し分け（位置情報の許可状況に応じて）
+  let nearSectionTitle = "おすすめイベント";
+  let nearSectionBody = "";
+  if(S.geoStatus==='granted' && S.userLocation){
+    const withDist = notEnded.map(e=>({e,km:haversineKm(S.userLocation.lat,S.userLocation.lng,e.lat,e.lng)}))
+      .filter(x=>x.km!=null).sort((a,b)=>a.km-b.km).slice(0,6);
+    nearSectionTitle = "近くのイベント";
+    nearSectionBody = withDist.length
+      ? `<div class="hscroll">${withDist.map(x=>eventCard(x.e)).join('')}</div>`
+      : `<div class="empty-state" style="padding:20px 30px;"><div class="em">📍</div>位置情報を取得できるイベントが見つかりませんでした</div>`;
+  } else {
+    nearSectionBody = `<div class="geo-banner">
+      <span>📍 現在地を利用すると、近くのイベントを表示できます</span>
+      <button onclick="EP.requestLocation()">${S.geoStatus==='loading'?'取得中…':'許可する'}</button>
+    </div>` + `<div class="hscroll">${recommended.slice(0,4).map(e=>eventCard(e)).join('')}</div>`;
+    nearSectionTitle = S.geoStatus==='denied' ? "おすすめイベント" : "近くのイベント";
+  }
+
+  return header + `
+  <div style="margin:2px 18px 16px;padding:16px;border-radius:20px;background:linear-gradient(120deg,var(--coral-soft),var(--sun-soft));">
+    <div style="font-size:11.5px;font-weight:800;color:var(--coral-dark);margin-bottom:4px;">${countdown}</div>
+    <div style="font-size:16px;font-weight:800;">${featured.name}</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin:2px 0 10px;">${fmtRange(featured)}・${featured.venue}</div>
+    <button class="btn btn-primary btn-sm" onclick="EP.openEvent('${featured.id}')">詳しく見る</button>
+  </div>
+  <div class="section-title">おすすめイベント</div>
+  <div class="hscroll">${recommended.map(e=>eventCard(e)).join('')}</div>
+  <div class="section-title">開催予定</div>
+  <div class="hscroll">${upcoming.length?upcoming.map(e=>eventCard(e)).join(''):`<div class="empty-state" style="padding:20px 30px;">現在開催予定のイベントはありません</div>`}</div>
+  <div class="section-title">${nearSectionTitle}</div>
+  ${nearSectionBody}
+  <div class="section-title">人気のイベント</div>
+  <div class="hscroll">${popular.map(e=>eventCard(e)).join('')}</div>
+  <div class="section-title">お気に入り<span class="more" onclick="EP.go('favorites')">すべて見る ${'>'}</span></div>
+  ${S.favorites.size ? `<div class="hscroll">${EVENTS.filter(e=>S.favorites.has(e.id)).map(e=>eventCard(e)).join('')}</div>`
+    : `<div class="empty-state" style="padding:24px 30px;"><div class="em">🤍</div>気になるイベントをお気に入り登録してみましょう</div>`}
+  `;
+}
+
+function screenSearch(){
+  const q = S.searchQuery;
+  const results = EVENTS.filter(ev=>{
+    if(q.category!=='すべて' && ev.category!==q.category) return false;
+    if(q.keyword && !(ev.name+ev.desc+ev.venue).includes(q.keyword)) return false;
+    if(q.name && !ev.name.includes(q.name)) return false;
+    if(q.region && !ev.region.includes(q.region)) return false;
+    if(q.date && !(ev.dateStart<=q.date && q.date<=ev.dateEnd)) return false;
+    return true;
+  });
+  return `
+  <div class="topbar"><h1>${t('title_search')}</h1></div>
+  <div class="search-box">${icon('search')}<input placeholder="イベント名・地域・キーワードで検索" value="${q.keyword}" oninput="EP.setSearch('keyword',this.value)"></div>
+  <div class="chip-row">
+    ${CATS.map(c=>`<button class="chip ${q.category===c?'active':''}" onclick="EP.setSearch('category','${c}')">${c!=='すべて'?(CAT_EMOJI[c]+' '):''}${c}</button>`).join('')}
+  </div>
+  <div style="display:flex;gap:10px;margin:14px 18px 4px;">
+    <input class="field-input" style="margin:0;flex:1;" placeholder="地域" value="${q.region}" oninput="EP.setSearch('region',this.value)">
+    <input class="field-input" style="margin:0;flex:1;" type="date" value="${q.date}" oninput="EP.setSearch('date',this.value)">
+  </div>
+  <div class="section-title">検索結果 <span class="more">${results.length}件</span></div>
+  <div style="padding:0 18px;display:flex;flex-direction:column;gap:12px;">
+    ${results.length? results.map(e=>eventCard(e,{wide:true})).join('') : `<div class="empty-state"><div class="em">🔍</div>条件に合うイベントが見つかりませんでした</div>`}
+  </div>
+  `;
+}
+
+function screenFavorites(){
+  const favs = EVENTS.filter(e=>S.favorites.has(e.id));
+  return `
+  <div class="topbar"><h1>${t('title_favorites')}</h1></div>
+  <div style="padding:8px 18px 0;display:flex;flex-direction:column;gap:12px;">
+    ${favs.length? favs.map(e=>eventCard(e,{wide:true})).join('') : `<div class="empty-state"><div class="em">🤍</div>お気に入りのイベントはまだありません<br><span style="font-size:12px;">気になるイベントのハートを押して登録しましょう</span></div>`}
+  </div>
+  `;
+}
+
+function screenMenu(){
+  const loggedIn = !!S.currentUser;
+  const roleLabels = {user:{ja:'一般ユーザー',en:'User'},organizer:{ja:'主催者',en:'Organizer'},staff:{ja:'スタッフ',en:'Staff'},admin:{ja:'管理者',en:'Admin'},guest:{ja:'',en:''}};
+  const roleLabel = (roleLabels[S.userRole]||roleLabels.guest)[S.lang] || '';
+  return `
+  <div class="topbar"><h1>${t('title_menu')}</h1></div>
+  <div class="card pad" style="margin:6px 18px 18px;display:flex;align-items:center;gap:14px;" ${!loggedIn?`onclick="EP.openAuth('login')"`:''}>
+    <div style="width:52px;height:52px;border-radius:50%;background:var(--sky-soft);display:flex;align-items:center;justify-content:center;color:var(--sky);flex-shrink:0;overflow:hidden;">${(loggedIn && S.currentUser.avatarUrl) ? `<img src="${S.currentUser.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` : icon('user')}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:800;font-size:15px;">${loggedIn?(S.currentUser.name||S.currentUser.email):t('guest')}${roleLabel?`<span class="role-tag">${roleLabel}</span>`:''}</div>
+      <div style="font-size:12px;color:var(--ink-soft);">${loggedIn?(S.currentUser.email||''):(S.lang==='en'?'Tap to log in / sign up':'タップしてログイン / 新規登録')}</div>
+    </div>
+    ${loggedIn?`<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();EP.logOut()">${t('logout')}</button>`:''}
+  </div>
+  <div class="menu-list">
+    <div class="menu-row" onclick="EP.go('mytickets')">${icon('ticket')}${t('title_mytickets')}${icon('chev','chev')}</div>
+    <div class="menu-row" onclick="EP.go('favorites')">${icon('heart')}${t('title_favorites')}${icon('chev','chev')}</div>
+    <div class="menu-row">${icon('calendar')}${S.lang==='en'?'History':'参加履歴'}<span class="mock-flag">${S.lang==='en'?'Coming soon':'近日対応'}</span>${icon('chev','chev')}</div>
+    <div class="menu-row" onclick="EP.go('account')">${icon('bell')}${t('notifications')}${icon('chev','chev')}</div>
+    <div class="menu-row" onclick="EP.go('account')">${icon('cog')}${t('title_account')}${icon('chev','chev')}</div>
+  </div>
+  <div class="menu-list">
+    <div class="menu-row" onclick="EP.openLangPicker()">${icon('info')}${t('language')}<span style="margin-left:auto;font-size:12px;color:var(--ink-faint);">${S.lang==='ja'?'🇯🇵 日本語':'🇺🇸 English'}</span>${icon('chev','chev')}</div>
+    <div class="menu-row">${icon('question')}${t('help')}${icon('chev','chev')}</div>
+    <div class="menu-row">${icon('info')}${S.lang==='en'?'About InPass':'アプリについて'}${icon('chev','chev')}</div>
+  </div>
+  ${loggedIn?`
+  <div class="menu-list">
+    <div class="menu-row" onclick="EP.openAppModeChooser()">${icon('cog')}${t('title_appmode')}<span style="margin-left:auto;font-size:12px;color:var(--ink-faint);">${S.mode==='user'?(S.lang==='en'?'User':'ユーザー'):S.mode==='admin'?(S.lang==='en'?'Organizer':'主催者'):(S.lang==='en'?'Staff':'スタッフ')}</span>${icon('chev','chev')}</div>
+  </div>`:''}
+  <div style="padding:0 18px 20px;font-size:11px;color:var(--ink-faint);line-height:1.7;">${CLOUD_MODE
+    ? (S.lang==='en' ? 'This app is connected to Supabase. Favorites and tickets are synced across your devices.' : 'このアプリはSupabase（クラウドデータベース）に接続されています。お気に入り・チケットなどは複数の端末間で同期されます。')
+    : (S.lang==='en' ? 'This app stores all data locally in this browser only. Data will be lost if you clear your browser cache, and is not synced across devices.' : 'このアプリはサーバーを使わず、すべてこのブラウザ内（localStorage）にデータを保存しています。ブラウザやキャッシュを消去するとデータは失われ、他の端末とは同期されません（README.md参照）。')}</div>
+  `;
+}
+
+/* ---------- アカウント設定（通知設定 / 退会） ---------- */
+function screenAccount(){
+  if(!S.currentUser){
+    return `
+    <div class="topbar"><button class="back-btn" onclick="EP.go('menu')">${icon('back')}</button><h1>${t('title_account')}</h1></div>
+    <div class="empty-state"><div class="em">🔒</div>この機能を利用するにはログインが必要です</div>
+    `;
+  }
+  if(S.showDeleteAccountConfirm) return screenDeleteAccountConfirm();
+
+  const perm = (typeof Notification!=="undefined") ? Notification.permission : "unsupported";
+  const permLabel = {granted:"許可されています",denied:"ブロックされています（ブラウザの設定から変更してください）",default:"未設定",unsupported:"このブラウザは通知に対応していません"}[perm];
+  const notifPref = S.currentUser.notificationEnabled !== false;
+
+  return `
+  <div class="topbar"><button class="back-btn" onclick="EP.go('menu')">${icon('back')}</button><h1>${t('title_account')}</h1></div>
+
+  <div class="section-title" style="margin-top:6px;">🔔 通知設定</div>
+  <div class="card pad" style="margin:0 18px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div>
+        <div style="font-weight:800;font-size:13.5px;">お知らせ・イベント通知</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">開催前のお知らせ・スケジュール変更・混雑情報などをお届けします</div>
+      </div>
+      <label style="flex-shrink:0;">
+        <input type="checkbox" ${notifPref?'checked':''} onchange="EP.toggleNotificationPref(this.checked)" style="width:20px;height:20px;">
+      </label>
+    </div>
+    <div class="hr"></div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px;">ブラウザの通知許可：<b style="color:var(--ink);">${permLabel}</b></div>
+    ${perm==='default' ? `<button class="btn btn-outline btn-sm" onclick="EP.requestNotifPermission()">通知を許可する</button>` : ''}
+    ${perm==='granted' ? `<button class="btn btn-outline btn-sm" onclick="EP.sendTestNotification()">テスト通知を送る</button>` : ''}
+    <div class="form-note">このアプリにはサーバーがないため、アプリを閉じている間のプッシュ通知（本物のFCM/APNsのような配信）はできません。ここで送れるのは、アプリを開いている間だけ表示される「テスト通知」です。実際のプッシュ配信には、通知を送るサーバー側の仕組みが別途必要です。</div>
+  </div>
+
+  <div class="section-title">プロフィール</div>
+  <div class="card pad" style="margin:0 18px 20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--sky-soft);display:flex;align-items:center;justify-content:center;color:var(--sky);flex-shrink:0;overflow:hidden;">
+        ${S.currentUser.avatarUrl ? `<img src="${S.currentUser.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` : icon('user')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;">
+          ${S.avatarUploadPct!=null ? `${S.lang==='en'?'Uploading…':'アップロード中…'} ${S.avatarUploadPct}%` : `📷 ${S.lang==='en'?'Change photo':'画像を変更'}`}
+          <input type="file" accept="image/*" style="display:none;" onchange="EP.uploadAvatar(this)" ${!CLOUD_MODE?'disabled':''}>
+        </label>
+        ${S.currentUser.avatarUrl?`<button class="btn btn-outline btn-sm" onclick="EP.removeAvatar()">🗑️ ${S.lang==='en'?'Remove photo':'画像を削除'}</button>`:''}
+      </div>
+    </div>
+    ${!CLOUD_MODE?`<div class="form-note" style="margin-top:0;">${S.lang==='en'?'Profile photos require cloud mode (Supabase Storage).':'プロフィール画像の変更にはクラウドモード（Supabase Storage）への接続が必要です。'}</div>`:''}
+    <div class="hr"></div>
+    <div style="font-size:13px;color:var(--ink-soft);display:flex;flex-direction:column;gap:8px;">
+      <div><b style="color:var(--ink);">お名前：</b>${S.currentUser.name||'（未設定）'}</div>
+      <div><b style="color:var(--ink);">メールアドレス：</b>${S.currentUser.email}</div>
+      <div><b style="color:var(--ink);">アカウントの種類：</b>${({user:'一般ユーザー',organizer:'主催者',staff:'スタッフ',admin:'管理者'})[S.userRole]||S.userRole}</div>
+    </div>
+  </div>
+
+  <div class="danger-zone">
+    <div style="font-weight:800;font-size:13.5px;margin-bottom:6px;">退会する</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6;">アカウントを削除すると、お気に入り・チケットなどこのアカウントに紐づく情報がすべて利用できなくなります。</div>
+    <button class="btn btn-outline" style="border-color:var(--danger-soft);color:var(--danger);" onclick="EP.openDeleteAccount()">退会する</button>
+  </div>
+  `;
+}
+function screenDeleteAccountConfirm(){
+  return `
+  <div class="topbar"><button class="back-btn" onclick="EP.cancelDeleteAccount()">${icon('back')}</button><h1>退会の確認</h1></div>
+  <div style="padding:30px 24px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:14px;">⚠️</div>
+    <div style="font-weight:800;font-size:17px;margin-bottom:10px;">退会しますか？</div>
+    <p style="font-size:13px;color:var(--ink-soft);line-height:1.8;max-width:320px;margin:0 auto 26px;">退会すると、アカウント情報やお気に入り・チケットなどの登録情報が利用できなくなります。この操作は取り消せません。</p>
+    <button class="btn btn-danger" style="max-width:320px;margin:0 auto 12px;" onclick="EP.confirmDeleteAccount()">本当に退会する</button>
+    <button class="btn btn-outline" style="max-width:320px;margin:0 auto;" onclick="EP.cancelDeleteAccount()">やめる</button>
+  </div>
+  `;
+}
+
+function screenMyTickets(){
+  const myTickets = S.tickets;
+  // 参加予定：有効なチケットを持つ、まだ終了していないイベント（お気に入りとは別の機能）
+  const upcomingByEvent = {};
+  myTickets.filter(t=>t.status==='valid').forEach(t=>{
+    const ev = getEvent(t.eventId);
+    if(!ev || computeEventStatus(ev).key==='ended') return;
+    upcomingByEvent[ev.id] = upcomingByEvent[ev.id] || {ev, count:0};
+    upcomingByEvent[ev.id].count++;
+  });
+  const myEvents = Object.values(upcomingByEvent).sort((a,b)=>getEventTimes(a.ev).start-getEventTimes(b.ev).start);
+  return `
+  <div class="topbar"><h1>${t('title_mytickets')}</h1></div>
+  ${myEvents.length ? `
+    <div class="section-title" style="margin-top:6px;">🎫 ${t('myevents')}</div>
+    ${myEvents.map(({ev,count})=>`
+      <div class="myevent-row" onclick="EP.openEvent('${ev.id}')">
+        <div class="em">${CAT_EMOJI[ev.category]}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:800;font-size:13.5px;">${ev.name}</div>
+          <div style="font-size:11.5px;color:var(--ink-soft);">${fmtRange(ev)} ${ev.startTime||''}</div>
+          <div style="font-size:11.5px;color:var(--coral-dark);font-weight:700;margin-top:2px;">🎫 チケット${count}枚</div>
+        </div>
+        <span class="badge ${computeEventStatus(ev).cls}">${computeEventStatus(ev).label}</span>
+      </div>`).join('')}
+    <div class="section-title">すべてのチケット</div>
+  ` : ''}
+  ${myTickets.length===0?`<div class="empty-state"><div class="em">🎫</div>チケットはまだありません</div>`: myTickets.map(t=>renderTicketCard(t)).join('')}
+  `;
+}
+
+function renderTicketCard(t){
+  const ev = getEvent(t.eventId);
+  const c = CAT_COLOR[ev.category];
+  const statusBadge = t.status==='valid' ? `<span class="badge badge-green">利用可能</span>` : `<span class="badge" style="background:#EFE9E2;color:var(--ink-faint);">使用済み</span>`;
+  return `<div class="mticket" onclick="EP.openTicket('${t.id}')">
+    <div class="mticket-top" style="background:${c[1]};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div class="tname">${ev.name}</div><div class="tdate">${fmtRange(ev)}・${ev.venue}</div></div>
+        ${statusBadge}
+      </div>
+    </div>
+    <div class="mticket-punch"></div>
+    <div class="mticket-bottom">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);">
+        <span>${t.typeName}</span><span>ID: ${t.id}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTicketPickModal(){
+  const ev = getEvent(S.showTicketModal);
+  return `<div class="modal-overlay" onclick="if(event.target===this)EP.closeModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;">チケットを選択</div>
+      ${ev.ticketTypes.map(tt=>`
+        <div class="ticket-type-row" style="margin:0 0 10px;">
+          <div><div class="ticket-type-name">${tt.name}</div><div class="ticket-type-sub">${tt.note}</div></div>
+          <button class="btn btn-primary btn-sm" onclick="EP.issueTicket('${ev.id}','${tt.id}')">${formatPrice(tt.price)}で取得</button>
+        </div>`).join('')}
+      <button class="btn btn-outline" onclick="EP.closeModal()">閉じる</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- Event detail ---------- */
+const DETAIL_TABS = ["概要","スケジュール","マップ","お知らせ","混雑情報","暑さ対策","フォト","チケット"];
+function screenDetail(){
+  const ev = getEvent(S.eventId);
+  if(!ev) return screenHome();
+  if(!S.selectedDay || !ev.schedule[S.selectedDay]) S.selectedDay = ev.days[0];
+  const fav = S.favorites.has(ev.id);
+  const status = computeEventStatus(ev);
+  let content='';
+  if(S.detailTab==='概要') content = detailOverview(ev);
+  else if(S.detailTab==='スケジュール') content = detailSchedule(ev);
+  else if(S.detailTab==='マップ') content = detailMap(ev);
+  else if(S.detailTab==='お知らせ') content = detailNotices(ev);
+  else if(S.detailTab==='混雑情報') content = detailCongestion(ev);
+  else if(S.detailTab==='暑さ対策') content = detailHeat(ev);
+  else if(S.detailTab==='フォト') content = detailPhotos(ev);
+  else if(S.detailTab==='チケット') content = detailTickets(ev);
+
+  return `
+  <div class="detail-hero" style="${heroStyle(ev.category)}">
+    <div class="detail-hero-inner">${CAT_EMOJI[ev.category]}</div>
+    <div class="detail-hero-overlay"></div>
+    <div class="detail-top-actions">
+      <button class="circle-btn" onclick="EP.go('home')">${icon('back')}</button>
+      <div style="display:flex;gap:8px;">
+        <button class="share-btn" onclick="EP.shareEvent('${ev.id}')" aria-label="イベントを共有">↗️</button>
+        <button class="circle-btn" onclick="EP.toggleFav('${ev.id}')" style="${fav?'color:var(--coral)':''}">${icon('heart')}</button>
+      </div>
+    </div>
+    <div class="detail-header-text">
+      <span class="badge ${status.cls}" style="margin-bottom:6px;">${status.label}</span>
+      <h2>${ev.name}</h2>
+      <div class="meta">${icon('calendar')}${fmtRange(ev)}</div>
+      <div class="meta">${icon('pin')}${ev.venue}</div>
+    </div>
+  </div>
+  <div class="tabbar">
+    ${DETAIL_TABS.map(t=>`<button class="tabbtn ${S.detailTab===t?'active':''}" onclick="EP.setDetailTab('${t}')">${t}</button>`).join('')}
+  </div>
+  ${content}
+  `;
+}
+function detailOverview(ev){
+  const status = computeEventStatus(ev);
+  const postEventBlock = status.key==='ended' ? renderPostEventBlock(ev) : '';
+  return `
+  ${postEventBlock}
+  <div class="pad" style="padding-top:16px;">
+    <div style="font-size:13px;color:var(--coral-dark);font-weight:800;margin-bottom:6px;">${ev.catch}</div>
+    <p style="font-size:13.5px;line-height:1.8;color:var(--ink);margin:0 0 14px;">${ev.desc}</p>
+    <div class="hr"></div>
+    <div style="font-size:12.5px;color:var(--ink-soft);display:flex;flex-direction:column;gap:8px;">
+      <div><b style="color:var(--ink);">主催者：</b>${ev.organizer}</div>
+      <div><b style="color:var(--ink);">会場：</b>${ev.venue}</div>
+      <div><b style="color:var(--ink);">開催日：</b>${fmtRange(ev)}</div>
+      <div><b style="color:var(--ink);">カテゴリー：</b>${CAT_EMOJI[ev.category]} ${ev.category}</div>
+    </div>
+  </div>
+  ${status.key!=='ended' ? `<div style="padding:6px 18px 18px;">
+    <button class="btn btn-primary" onclick="EP.setDetailTab('チケット')">${icon('ticket')} チケットを見る</button>
+  </div>` : ''}
+  `;
+}
+function renderPostEventBlock(ev){
+  const fav = S.favorites.has(ev.id);
+  // 「次回開催予定」：同じカテゴリーで、まだ終了していない別のイベントがあれば案内
+  const nextEvent = EVENTS.find(e=>e.id!==ev.id && e.category===ev.category && computeEventStatus(e).key!=='ended');
+  const notices = (S.notices[ev.id]||[]).slice(0,2);
+  return `
+  <div class="postevent-hero">
+    <div style="font-size:22px;margin-bottom:6px;">🎉</div>
+    <div style="font-weight:800;font-size:15px;">イベントは終了しました！</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">ご参加ありがとうございました。次回の開催もお楽しみに。</div>
+  </div>
+  <div class="postevent-links">
+    <button class="postevent-link" onclick="EP.setDetailTab('フォト')">📸 イベント写真</button>
+    <button class="postevent-link" onclick="EP.toggleFav('${ev.id}')">${fav?'⭐ お気に入り済み':'⭐ お気に入りに追加'}</button>
+    ${nextEvent?`<button class="postevent-link" onclick="EP.openEvent('${nextEvent.id}')">📅 次回：${nextEvent.name}</button>`:`<div class="postevent-link" style="color:var(--ink-faint);">📅 次回開催は未定です</div>`}
+    <button class="postevent-link" onclick="EP.setDetailTab('お知らせ')">📢 主催者からのお知らせ${notices.length?`（${notices.length}）`:''}</button>
+  </div>
+  `;
+}
+function detailSchedule(ev){
+  return `
+  <div class="chip-row" style="margin-top:14px;">
+    ${ev.days.map(d=>`<button class="chip ${S.selectedDay===d?'active':''}" onclick="EP.setDay('${d}')">${d}</button>`).join('')}
+  </div>
+  <div style="margin-top:10px;">
+    ${(ev.schedule[S.selectedDay]||[]).map(s=>`<div class="sched-row"><div class="sched-time">${s.t}</div><div><div class="sched-title">${s.title}</div>${s.sub?`<div class="sched-sub">${s.sub}</div>`:''}</div></div>`).join('')}
+  </div>`;
+}
+const PIN_EMOJI = {stage:"🎪",toilet:"🚻",parking:"🚗",bike:"🚲",aid:"🚑",gate:"🚪",bus:"🚌",food:"🍴",info:"ℹ️",reception:"🎫",other:"📍"};
+const PIN_COLOR = {stage:"#FF6F51",toilet:"#5B9BD9",parking:"#8A7A6D",bike:"#1B9E92",aid:"#E5484D",gate:"#E5A427",bus:"#9B6BD6",food:"#FFB531",info:"#3FA76B",reception:"#E5573B",other:"#8A7A6D"};
+const PIN_TYPE_LABELS = {stage:"ステージ",toilet:"トイレ",parking:"駐車場",bike:"駐輪場",aid:"救護所",gate:"出入口",bus:"シャトルバス",food:"飲食エリア",info:"案内所",reception:"受付",other:"その他"};
+function detailMap(ev){
+  return `
+  <div class="map-wrap">
+    <svg class="map-svg" viewBox="0 0 360 280">
+      <rect width="360" height="280" fill="#EAF4EE"/>
+      <path d="M0 40 H360 M0 120 H360 M0 200 H360" stroke="#D9E9DE" stroke-width="2"/>
+      <path d="M90 0 V280 M270 0 V280" stroke="#D9E9DE" stroke-width="2"/>
+      ${ev.mapPins.map((p,i)=>`
+        <g class="map-pin" onclick='EP.showPin(${i})'>
+          <circle cx="${p.x}" cy="${p.y}" r="15" fill="${PIN_COLOR[p.type]||PIN_COLOR.other}" stroke="#fff" stroke-width="3"/>
+          <text x="${p.x}" y="${p.y+5}" font-size="14" text-anchor="middle">${PIN_EMOJI[p.type]||PIN_EMOJI.other}</text>
+        </g>`).join('')}
+    </svg>
+  </div>
+  <div class="map-legend">
+    ${Array.from(new Set(ev.mapPins.map(p=>p.type))).map(k=>`<span class="legend-chip"><span class="legend-dot" style="background:${PIN_COLOR[k]||PIN_COLOR.other}"></span>${PIN_EMOJI[k]||PIN_EMOJI.other} ${PIN_TYPE_LABELS[k]||'その他'}</span>`).join('')}
+  </div>
+  `;
+}
+function detailNotices(ev){
+  const list = S.notices[ev.id]||[];
+  return `<div style="margin-top:6px;">
+    ${list.length===0?`<div class="empty-state">お知らせはありません</div>`:
+    list.map(n=>`<div class="notice-item ${n.important?'important':''}"><div class="notice-dot"></div><div style="flex:1;"><div class="notice-date">${n.date}${n.important?' ・重要':''}</div><div class="notice-title">${n.title}</div><div class="notice-body">${n.body}</div></div></div>`).join('')}
+  </div>`;
+}
+function detailCongestion(ev){
+  const c = S.congestion[ev.id]||{};
+  let latest = "";
+  return `<div style="margin-top:6px;">
+    ${ev.congestionSpots.map(sp=>{
+      const entry = c[sp]||{level:0,updatedAt:null};
+      const badges=[['badge-green','🟢 空いています'],['badge-yellow','🟡 やや混雑'],['badge-red','🔴 混雑']];
+      const b = badges[entry.level];
+      if(entry.updatedAt) latest = fmtTimestamp(entry.updatedAt);
+      return `<div class="congestion-row"><div class="congestion-name">${sp}</div><span class="badge ${b[0]}">${b[1]}</span></div>`;
+    }).join('')}
+    <div style="padding:14px 18px;font-size:11px;color:var(--ink-faint);">${latest?('最終更新：'+latest):'主催者管理画面と連動しています'}</div>
+  </div>`;
+}
+function wmoDesc(code){
+  if(code===0) return "快晴";
+  if([1,2,3].includes(code)) return "晴れ〜曇り";
+  if([45,48].includes(code)) return "霧";
+  if([51,53,55,56,57].includes(code)) return "小雨";
+  if([61,63,65,66,67].includes(code)) return "雨";
+  if([71,73,75,77].includes(code)) return "雪";
+  if([80,81,82].includes(code)) return "にわか雨";
+  if([95,96,99].includes(code)) return "雷雨";
+  return "情報なし";
+}
+function heatLevelFromTemp(temp){
+  if(temp==null) return null;
+  if(temp>=35) return "危険";
+  if(temp>=31) return "警戒";
+  if(temp>=28) return "注意";
+  return "注意なし";
+}
+function detailHeat(ev){
+  const w = S.weatherCache[ev.id];
+  if(!w && ev.lat!=null && ev.lng!=null){
+    S.weatherCache[ev.id] = {loading:true};
+    EP.fetchWeather(ev.id, ev.lat, ev.lng);
+  }
+  const live = w && !w.loading && !w.error;
+  const temp = live ? w.temp : ev.heat.temp;
+  const humidity = live ? w.humidity : ev.heat.humidity;
+  const level = live ? (heatLevelFromTemp(w.temp)||ev.heat.level) : ev.heat.level;
+  const wbgt = live ? "-" : ev.heat.wbgt;
+  const sourceNote = live
+    ? `Open-Meteo（気象情報API）から取得した現在の気象データです。${w.fetchedAt?('取得時刻：'+w.fetchedAt.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})):''}`
+    : (w && w.loading ? "気象情報を取得中…" : (w && w.error ? "気象情報を取得できなかったため、参考値を表示しています。" : "参考値を表示しています。"));
+  return `
+  <div class="heat-hero">
+    <div style="font-size:12px;font-weight:800;color:var(--warn);">熱中症警戒情報</div>
+    <div class="lvl">⚠️ ${level}</div>
+    <div style="font-size:12px;color:var(--ink-soft);">${live?wmoDesc(w.weatherCode)+'・':''}こまめに水分補給を行いましょう</div>
+  </div>
+  <div class="heat-stats">
+    <div class="heat-stat"><div class="val">${temp}℃</div><div class="lbl">気温</div></div>
+    <div class="heat-stat"><div class="val">${humidity}%</div><div class="lbl">湿度</div></div>
+    <div class="heat-stat"><div class="val">${wbgt}${wbgt!=="-"?"℃":""}</div><div class="lbl">WBGT${live?'（参考値）':''}</div></div>
+  </div>
+  <div class="pad" style="padding-top:0;">
+    <div style="font-size:12.5px;font-weight:800;margin-bottom:8px;">注意事項</div>
+    <ul style="margin:0 0 10px;padding-left:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.9;">
+      ${ev.heat.notes.map(n=>`<li>${n}</li>`).join('')}
+    </ul>
+    <div style="font-size:10.5px;color:var(--ink-faint);">${sourceNote}</div>
+  </div>`;
+}
+function detailPhotos(ev){
+  const uploaded = (S.photos[ev.id]||[]).map(p=>({cat:"アップロード",url:p.imageUrl}));
+  const seed = ev.photos||[];
+  const all = [...uploaded, ...seed];
+  const cats = ["すべて", ...Array.from(new Set(all.map(p=>p.cat)))];
+  const filtered = S.photoFilter==='すべて'?all:all.filter(p=>p.cat===S.photoFilter);
+  return `
+  <div class="chip-row" style="margin-top:14px;">${cats.map(c=>`<button class="chip ${S.photoFilter===c?'active':''}" onclick="EP.setPhotoFilter('${c}')">${c}</button>`).join('')}</div>
+  <div class="photo-grid">
+    ${filtered.map((p,i)=> p.url
+      ? `<div class="photo-tile" style="background-image:url('${p.url}');background-size:cover;background-position:center;"></div>`
+      : `<div class="photo-tile" style="${heroStyle(ev.category)}">${p.emoji}</div>`
+    ).join('')}
+    <label class="photo-tile" style="background:var(--surface);border:1.5px dashed var(--line);color:var(--ink-faint);font-size:22px;cursor:pointer;">
+      ${S.photoUploadPct!==null?`<span style="font-size:11px;font-weight:800;">${S.photoUploadPct}%</span>`:'＋'}
+      <input type="file" accept="image/*" style="display:none;" onchange="EP.uploadPhotoFile('${ev.id}', this)">
+    </label>
+  </div>
+  <div style="font-size:11px;color:var(--ink-faint);text-align:center;padding-bottom:10px;">
+    ${S.photoUploadPct!==null?'アップロード中…' : '写真をタップで拡大／＋ボタンで写真を追加できます'}
+  </div>
+  `;
+}
+function detailTickets(ev){
+  const busy = S.busy.issueTicket;
+  return `<div style="padding:16px 0 4px;">
+    ${ev.ticketTypes.map(tt=>`
+      <div class="ticket-type-row">
+        <div><div class="ticket-type-name">${tt.name}</div><div class="ticket-type-sub">${tt.note}</div></div>
+        <button class="btn btn-primary btn-sm" ${busy?'disabled':''} onclick="EP.issueTicket('${ev.id}','${tt.id}')">${busy?'<span class="spinner"></span>取得中…':(formatPrice(tt.price)+'で取得')}</button>
+      </div>`).join('')}
+    <div style="padding:10px 18px 4px;font-size:11.5px;color:var(--ink-faint);">※現在はすべて無料チケットとして発行されます</div>
+  </div>`;
+}
+
+/* ---------- Ticket detail (QR) modal-as-screen ---------- */
+function screenTicketDetail(){
+  const t = S.tickets.find(x=>x.id===S.ticketDetailId);
+  const ev = getEvent(t.eventId);
+  const c = CAT_COLOR[ev.category];
+  return `
+  <div class="topbar"><button class="back-btn" onclick="EP.closeTicketDetail()">${icon('back')}</button><h1>チケット詳細</h1></div>
+  <div class="mticket" style="margin-top:6px;">
+    <div class="mticket-top" style="background:${c[1]};">
+      <div class="tname">${ev.name}</div>
+      <div class="tdate">${fmtRange(ev)}</div>
+    </div>
+    <div class="mticket-punch"></div>
+    <div class="mticket-bottom">
+      <div style="text-align:center;font-size:12.5px;font-weight:800;margin-bottom:2px;">${t.typeName}</div>
+      <div class="qr-box">${qrSVG(t.id, t.status==='used', t.eventId)}</div>
+      <div class="ticket-id-text">チケットID：${t.id}</div>
+      ${t.status==='valid'
+        ? `<div class="badge badge-green" style="width:100%;justify-content:center;padding:9px;">${CONGESTION_LEVELS?'':''}✓ 利用可能</div>`
+        : `<div class="badge" style="width:100%;justify-content:center;padding:9px;background:#EFE9E2;color:var(--ink-faint);">使用済み</div>`}
+      <div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-top:10px;">入場ゲートでこの画面をスタッフに提示してください</div>
+    </div>
+  </div>
+  `;
+}
+/* チケットQRのペイロード形式: "INPASS1:{ticketId}:{eventId}"
+   個人情報（氏名・メールアドレスなど）は含めない。 */
+function ticketQrPayload(ticketId, eventId){ return `INPASS1:${ticketId}:${eventId}`; }
+
+function qrSVG(ticketId, used, eventId){
+  const payload = ticketQrPayload(ticketId, eventId||'');
+  if(typeof window.qrcode === 'function'){
+    try{
+      const qr = window.qrcode(0, 'M'); // type 0 = auto size
+      qr.addData(payload);
+      qr.make();
+      const count = qr.getModuleCount();
+      const cell = 168/count;
+      let rects='';
+      for(let r=0;r<count;r++){
+        for(let c=0;c<count;c++){
+          if(qr.isDark(r,c)) rects += `<rect x="${(c*cell).toFixed(2)}" y="${(r*cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="#2E2019"/>`;
+        }
+      }
+      return `<svg width="168" height="168" viewBox="0 0 168 168" style="border-radius:14px;${used?'opacity:.35;filter:grayscale(1);':''}">
+        <rect width="168" height="168" fill="#fff"/>
+        ${rects}
+        ${used?`<text x="84" y="84" text-anchor="middle" font-size="22" font-weight="800" fill="#E5484D" transform="rotate(-18 84 84)">USED</text>`:''}
+      </svg>`;
+    }catch(e){ /* フォールバックへ */ }
+  }
+  // ライブラリが読み込めなかった場合の簡易プレースホルダー（実際には読み取れません）
+  return `<svg width="168" height="168" viewBox="0 0 168 168" style="border-radius:14px;${used?'opacity:.35;filter:grayscale(1);':''}">
+    <rect width="168" height="168" fill="#fff"/>
+    <rect x="8" y="8" width="152" height="152" rx="10" fill="none" stroke="#E5484D" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="84" y="78" text-anchor="middle" font-size="12" font-weight="800" fill="#E5484D">QR生成失敗</text>
+    <text x="84" y="96" text-anchor="middle" font-size="10" fill="#8A7A6D">チケットIDで手入力してください</text>
+  </svg>`;
+}
+
+function renderMapPopup(){
+  const ev = getEvent(S.eventId);
+  const p = ev.mapPins[S.mapPopup];
+  return `<div class="modal-overlay" onclick="if(event.target===this)EP.closeMapPopup()">
+    <div class="modal-sheet" style="max-width:380px;">
+      <div class="modal-handle"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:${PIN_COLOR[p.type]||PIN_COLOR.other};display:flex;align-items:center;justify-content:center;font-size:17px;">${PIN_EMOJI[p.type]||PIN_EMOJI.other}</div>
+        <div style="font-weight:800;font-size:15.5px;">${p.label}</div>
+      </div>
+      <p style="font-size:13px;color:var(--ink-soft);line-height:1.7;margin:0 0 14px;">${p.info}</p>
+      <button class="btn btn-outline" onclick="EP.closeMapPopup()">閉じる</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- Admin ---------- */
+function renderAdmin(){
+  const nav = [
+    {v:'dashboard',label:'ダッシュボード',ic:'home'},
+    {v:'events',label:'イベント管理',ic:'calendar'},
+    {v:'schedule',label:'スケジュール管理',ic:'ticket'},
+    {v:'map',label:'会場マップ管理',ic:'pin'},
+    {v:'notices',label:'お知らせ管理',ic:'bell'},
+    {v:'congestion',label:'混雑情報管理',ic:'pin'},
+    {v:'ticketmgmt',label:'チケット管理',ic:'qr'},
+    ...(CLOUD_MODE?[{v:'staff',label:'スタッフ管理',ic:'user'}]:[]),
+  ];
+  // 現在指しているイベントIDが存在しない場合（自分のイベントがまだ無い、
+  // または別モードのIDが残っている場合）は、持っているイベントへ自動的に
+  // 切り替える。1件も無ければ専用の空の状態画面を表示してクラッシュを防ぐ。
+  if(!getEvent(S.adminEditingEventId)){
+    const myFirst = EVENTS.find(e=> !e.organizerId || (S.currentUser && e.organizerId===S.currentUser.uid)) || EVENTS[0];
+    if(myFirst) S.adminEditingEventId = myFirst.id;
+  }
+  const currentEv = getEvent(S.adminEditingEventId);
+  let main='';
+  if(!currentEv){
+    main = S.showNewEventForm ? adminNewEventForm() : `<div class="card pad" style="text-align:center;padding:48px 24px;">
+      <div style="font-size:38px;margin-bottom:10px;">🎪</div>
+      <div style="font-weight:800;font-size:15px;margin-bottom:8px;">まだイベントがありません</div>
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:20px;">最初のイベントを作成すると、ここに管理画面が表示されます。</div>
+      <button class="btn btn-primary" style="width:auto;padding:12px 28px;" onclick="EP.openNewEventForm();">＋ イベントを作成</button>
+    </div>`;
+  }
+  else if(S.adminView==='dashboard') main=adminDashboard();
+  else if(S.adminView==='events') main=adminEvents();
+  else if(S.adminView==='schedule') main=adminSchedule();
+  else if(S.adminView==='map') main=adminMap();
+  else if(S.adminView==='staff') main=adminStaff();
+  else if(S.adminView==='notices') main=adminNotices();
+  else if(S.adminView==='congestion') main=adminCongestion();
+  else if(S.adminView==='ticketmgmt') main=adminTickets();
+
+  return `<div class="admin-shell">
+    <div class="admin-topbar">
+      <span class="jp-display" style="font-size:19px;font-weight:800;color:var(--coral)">インパス管理画面</span>
+      <span class="sub">主催者：${currentEv ? currentEv.organizer : (S.currentUser?(S.currentUser.name||S.currentUser.email):'')}</span>
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="EP.requestReturnToUser()">← ユーザーに戻る</button>
+    </div>
+    <div class="admin-layout">
+      <div class="admin-side">
+        ${nav.map(n=>`<button class="admin-nav-item ${S.adminView===n.v?'active':''}" onclick="EP.setAdminView('${n.v}')">${icon(n.ic)} ${n.label}</button>`).join('')}
+      </div>
+      <div class="admin-main">${main}</div>
+    </div>
+  </div>
+  ${S.showReturnToUserConfirm?renderReturnToUserConfirm():''}
+  ${S.toastMsg?`<div class="toast" id="toast-holder">${S.toastMsg}</div>`:''}
+  `;
+}
+function barChart(values,labels,color){
+  const max=Math.max(...values,1);
+  const w=260,h=90,bw=w/values.length-8;
+  return `<svg width="100%" viewBox="0 0 ${w} ${h+20}">
+    ${values.map((v,i)=>{
+      const bh = (v/max)*h;
+      const x = i*(w/values.length)+4;
+      return `<rect x="${x}" y="${h-bh}" width="${bw}" height="${bh}" rx="4" fill="${color}"/>
+        <text x="${x+bw/2}" y="${h+14}" font-size="9" fill="#8A7A6D" text-anchor="middle">${labels[i]}</text>`;
+    }).join('')}
+  </svg>`;
+}
+function lineChart(values,labels,color){
+  const max=Math.max(...values,1), min=0;
+  const w=340,h=100;
+  const pts = values.map((v,i)=>[ (i/(values.length-1))*w, h-((v-min)/(max-min||1))*h ]);
+  const path = pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area = path + ` L ${w} ${h} L 0 ${h} Z`;
+  return `<svg width="100%" viewBox="0 0 ${w} ${h+22}">
+    <path d="${area}" fill="${color}22"/>
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${color}"/>`).join('')}
+    ${labels.map((l,i)=>`<text x="${pts[i][0]}" y="${h+16}" font-size="9" fill="#8A7A6D" text-anchor="middle">${l}</text>`).join('')}
+  </svg>`;
+}
+function adminDashboard(){
+  const evId = S.adminEditingEventId;
+  const evTickets = (S.allTickets||[]).filter(t=>t.eventId===evId);
+  const totalIssued = evTickets.length;
+  const used = evTickets.filter(t=>t.status==='used').length;
+  const notReady = totalIssued-used;
+  const noticesCount = (S.notices[evId]||[]).length;
+  const byType = {};
+  evTickets.forEach(t=>{ byType[t.typeName]=(byType[t.typeName]||0)+1; });
+  const typeLabels = Object.keys(byType).length?Object.keys(byType):["データなし"];
+  const typeValues = Object.keys(byType).length?Object.values(byType):[0];
+  return `
+  <div class="admin-grid">
+    <div class="stat-card"><div class="num">${EVENTS.length}</div><div class="lbl">登録イベント数</div></div>
+    <div class="stat-card"><div class="num">${totalIssued}</div><div class="lbl">チケット発行数</div></div>
+    <div class="stat-card"><div class="num">${used}</div><div class="lbl">チェックイン数</div></div>
+    <div class="stat-card"><div class="num">${notReady}</div><div class="lbl">未チェックイン数</div></div>
+    <div class="stat-card"><div class="num">${totalIssued}</div><div class="lbl">イベント参加者数<span class="mock-flag">発行数と同一</span></div></div>
+    <div class="stat-card"><div class="num">${noticesCount}</div><div class="lbl">お知らせ数</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card pad">
+      <div style="font-weight:800;font-size:13.5px;margin-bottom:10px;">参加者数の推移（直近7日）<span class="mock-flag">サンプル表示</span></div>
+      ${lineChart([320,410,380,520,610,700,860],["8/26","8/27","8/28","8/29","8/30","8/31","9/1"],"#FF6F51")}
+      <div style="font-size:10.5px;color:var(--ink-faint);margin-top:4px;">日次の推移グラフはまだサンプル表示です。発行数・チェックイン数など他の数値はこの端末に保存された実データです。</div>
+    </div>
+    <div class="card pad">
+      <div style="font-weight:800;font-size:13.5px;margin-bottom:10px;">チケット種類別 発行数</div>
+      ${barChart(typeValues,typeLabels,"#1B9E92")}
+    </div>
+  </div>
+  <div class="card pad" style="margin-top:16px;">
+    <div style="font-weight:800;font-size:13.5px;margin-bottom:10px;">最新のお知らせ</div>
+    <table class="table">
+      <thead><tr><th>日付</th><th>タイトル</th><th>重要</th></tr></thead>
+      <tbody>${(S.notices[evId]||[]).slice(0,4).map(n=>`<tr><td>${n.date}</td><td>${n.title}</td><td>${n.important?'⚠️ 重要':'－'}</td></tr>`).join('')}</tbody>
+    </table>
+  </div>
+  `;
+}
+function adminNewEventForm(){
+  return `
+  <div class="card pad" style="margin-bottom:16px;border:1.5px solid var(--coral);">
+    <div style="font-weight:800;font-size:14px;margin-bottom:14px;">新しいイベントを作成</div>
+    ${S.newEventError?`<div class="form-error">${S.newEventError}</div>`:''}
+    <div class="admin-form-row"><label>イベント名</label><input id="neName" placeholder="例：○○夏祭り2026"></div>
+    <div class="admin-form-row"><label>説明</label><textarea id="neDesc" placeholder="イベントの内容を入力してください"></textarea></div>
+    <div style="display:flex;gap:12px;">
+      <div class="admin-form-row" style="flex:1;"><label>カテゴリー</label>
+        <select id="neCategory">${CATS.filter(c=>c!=='すべて').map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+      </div>
+      <div class="admin-form-row" style="flex:1;"><label>都道府県</label><input id="nePrefecture" placeholder="例：東京都"></div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div class="admin-form-row" style="flex:1;"><label>市区町村</label><input id="neCity" placeholder="例：○○市"></div>
+      <div class="admin-form-row" style="flex:1;"><label>会場</label><input id="neVenue" placeholder="例：○○公園"></div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div class="admin-form-row" style="flex:1;"><label>開催日（開始）</label><input id="neStart" type="date"></div>
+      <div class="admin-form-row" style="flex:1;"><label>開催日（終了）</label><input id="neEnd" type="date"></div>
+    </div>
+    <div class="admin-form-row"><label>開催時間</label><input id="neTime" placeholder="例：10:00〜16:00"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" style="width:auto;padding:12px 24px;" ${S.busy.createEvent?'disabled':''} onclick="EP.submitNewEvent()">${S.busy.createEvent?'<span class="spinner"></span>公開中…':'公開する'}</button>
+      <button class="btn btn-outline" style="width:auto;padding:12px 24px;" onclick="EP.closeNewEventForm()">キャンセル</button>
+    </div>
+    <div class="form-note">${CLOUD_MODE ? '「公開する」を押すとSupabaseへ保存され、ユーザーの「探す」「ホーム」に表示されます。' : '「公開する」を押すとこのブラウザに保存され、ユーザーの「探す」「ホーム」に表示されます。'}</div>
+  </div>`;
+}
+function adminEvents(){
+  const ev = getEvent(S.adminEditingEventId);
+  const myEvents = EVENTS.filter(e=> !e.organizerId || (S.currentUser && e.organizerId===S.currentUser.uid));
+  return `
+  <div class="card pad" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-weight:800;font-size:13.5px;">イベント一覧（自分が主催するイベント）</div>
+      <button class="btn btn-primary btn-sm" onclick="EP.openNewEventForm()">＋ イベントを作成</button>
+    </div>
+    <table class="table">
+      <thead><tr><th>イベント名</th><th>カテゴリー</th><th>開催日</th><th>公開状態</th><th></th></tr></thead>
+      <tbody>${myEvents.map(e=>`<tr><td>${e.name}</td><td>${e.category}</td><td>${fmtRange(e)}</td><td>${e.status==='draft'?'下書き':'公開中'}</td><td><button class="btn btn-outline btn-sm" onclick="EP.editEvent('${e.id}')">編集</button></td></tr>`).join('')}</tbody>
+    </table>
+  </div>
+  ${S.showNewEventForm ? adminNewEventForm() : ''}
+  <div class="card pad">
+    <div style="font-weight:800;font-size:14px;margin-bottom:14px;">イベント編集：${ev.name}</div>
+    <div class="admin-form-row"><label>イベント名</label><input value="${ev.name}" onchange="EP.updateEvent('name',this.value)"></div>
+    <div style="display:flex;gap:12px;">
+      <div class="admin-form-row" style="flex:1;"><label>開催日（開始）</label><input type="date" value="${ev.dateStart}" onchange="EP.updateEvent('dateStart',this.value)"></div>
+      <div class="admin-form-row" style="flex:1;"><label>開催日（終了）</label><input type="date" value="${ev.dateEnd}" onchange="EP.updateEvent('dateEnd',this.value)"></div>
+    </div>
+    <div class="admin-form-row"><label>会場</label><input value="${ev.venue}" onchange="EP.updateEvent('venue',this.value)"></div>
+    <div class="admin-form-row"><label>イベント説明</label><textarea onchange="EP.updateEvent('desc',this.value)">${ev.desc}</textarea></div>
+    <div class="admin-form-row"><label>イベント画像（カラーテーマ）</label>
+      <div class="color-swatches">
+        ${Object.entries(CAT_COLOR).map(([k,c])=>`<div class="swatch ${ev.category===k?'sel':''}" style="background:${c[1]}" onclick="EP.updateEvent('category','${k}')" title="${k}"></div>`).join('')}
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:auto;padding:12px 28px;" onclick="EP.saveEvent()">保存する</button>
+  </div>
+  `;
+}
+function adminSchedule(){
+  const ev = getEvent(S.adminEditingEventId);
+  if(!S.adminDay || !ev.schedule[S.adminDay]) S.adminDay = ev.days[0];
+  const rows = ev.schedule[S.adminDay];
+  return `
+  <div class="card pad">
+    <div style="font-weight:800;font-size:14px;margin-bottom:12px;">スケジュール管理：${ev.name}</div>
+    <div class="chip-row" style="padding:0 0 12px;overflow:visible;">${ev.days.map(d=>`<button class="chip ${S.adminDay===d?'active':''}" onclick="EP.setAdminDay('${d}')">${d}</button>`).join('')}</div>
+    <table class="table">
+      <thead><tr><th>時間</th><th>内容</th><th>詳細</th><th></th></tr></thead>
+      <tbody>${rows.map((r,i)=>`<tr>
+        <td><input value="${r.t}" style="width:60px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;" onchange="EP.updateSchedRow(${i},'t',this.value)"></td>
+        <td><input value="${r.title}" style="width:150px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;" onchange="EP.updateSchedRow(${i},'title',this.value)"></td>
+        <td><input value="${r.sub||''}" style="width:150px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;" onchange="EP.updateSchedRow(${i},'sub',this.value)"></td>
+        <td><button class="btn btn-outline btn-sm" onclick="EP.removeSchedRow(${i})">削除</button></td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <button class="btn btn-secondary btn-sm" style="margin-top:12px;" onclick="EP.addSchedRow()">＋ スケジュールを追加</button>
+  </div>
+  `;
+}
+function adminStaff(){
+  const ev = getEvent(S.adminEditingEventId);
+  const list = S.staffList && S.staffList[ev.id];
+  if(!list){
+    S.staffList = S.staffList || {};
+    S.staffList[ev.id] = {loading:true};
+    DATA.listStaff && DATA.listStaff(ev.id).then(rows=>{ S.staffList[ev.id]={loading:false, rows}; render(); });
+  }
+  const staffState = S.staffList[ev.id] || {loading:true};
+  return `
+  <div class="card pad" style="margin-bottom:16px;">
+    <div style="font-weight:800;font-size:14px;margin-bottom:6px;">スタッフ管理：${ev.name}</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">このイベントのQRチェックインを担当できるスタッフを、メールアドレスで登録します。登録されたユーザーだけが、このイベントのチケットをチェックインできます。</div>
+    ${S.staffAssignError?`<div class="form-error">${S.staffAssignError}</div>`:''}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <input id="staffEmailInput" placeholder="スタッフのメールアドレス" style="flex:1;min-width:220px;padding:11px 13px;border:1.5px solid var(--line);border-radius:var(--r-sm);font-size:13.5px;">
+      <button class="btn btn-primary btn-sm" onclick="EP.assignStaff()">担当に追加</button>
+    </div>
+    <div class="form-note">追加するには、スタッフとなる方が先にインパスへ新規登録している必要があります。</div>
+  </div>
+  <div class="card pad">
+    <div style="font-weight:800;font-size:13.5px;margin-bottom:10px;">担当スタッフ一覧</div>
+    ${staffState.loading ? `<div style="color:var(--ink-faint);font-size:12.5px;">読み込み中…</div>`
+      : (staffState.rows && staffState.rows.length ? `<table class="table"><thead><tr><th>名前</th><th>メールアドレス</th><th></th></tr></thead>
+        <tbody>${staffState.rows.map(r=>`<tr><td>${r.name||'（未設定）'}</td><td>${r.email}</td><td><button class="btn btn-outline btn-sm" onclick="EP.removeStaff('${r.staff_id}')">解除</button></td></tr>`).join('')}</tbody></table>`
+        : `<div style="color:var(--ink-faint);font-size:12.5px;">まだスタッフが登録されていません</div>`)}
+  </div>
+  `;
+}
+function adminMap(){
+  const ev = getEvent(S.adminEditingEventId);
+  const draft = S.adminMapSpotDraft;
+  const typeOptions = Object.keys(PIN_TYPE_LABELS);
+  return `
+  <div class="card pad" style="margin-bottom:16px;">
+    <div style="font-weight:800;font-size:14px;margin-bottom:6px;">会場マップ管理：${ev.name}</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">スポットを追加・編集すると、ユーザー側の会場マップに反映されます。位置はマップ上のおおよその座標（0〜360, 0〜280）で指定します。</div>
+    <table class="table">
+      <thead><tr><th>種類</th><th>名称</th><th>説明</th><th>座標</th><th></th></tr></thead>
+      <tbody>${ev.mapPins.map((p,i)=>`<tr>
+        <td>${PIN_EMOJI[p.type]||PIN_EMOJI.other} ${PIN_TYPE_LABELS[p.type]||'その他'}</td>
+        <td><input value="${p.label}" style="width:120px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;" onchange="EP.updateMapSpot(${i},'label',this.value)"></td>
+        <td><input value="${p.info||''}" style="width:180px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;" onchange="EP.updateMapSpot(${i},'info',this.value)"></td>
+        <td style="font-size:11px;color:var(--ink-faint);">x:${p.x} / y:${p.y}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="EP.removeMapSpot(${i})">削除</button></td>
+      </tr>`).join('') || `<tr><td colspan="5" style="color:var(--ink-faint);">まだスポットが登録されていません</td></tr>`}</tbody>
+    </table>
+  </div>
+  <div class="card pad">
+    <div style="font-weight:800;font-size:13.5px;margin-bottom:12px;">＋ スポットを追加</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div class="admin-form-row" style="flex:1;min-width:140px;"><label>種類</label>
+        <select id="mapSpotType">${typeOptions.map(k=>`<option value="${k}">${PIN_EMOJI[k]} ${PIN_TYPE_LABELS[k]}</option>`).join('')}</select>
+      </div>
+      <div class="admin-form-row" style="flex:1;min-width:140px;"><label>名称</label><input id="mapSpotLabel" placeholder="例：第2ステージ"></div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div class="admin-form-row" style="flex:1;"><label>X座標（0〜360）</label><input id="mapSpotX" type="number" min="0" max="360" value="180"></div>
+      <div class="admin-form-row" style="flex:1;"><label>Y座標（0〜280）</label><input id="mapSpotY" type="number" min="0" max="280" value="140"></div>
+    </div>
+    <div class="admin-form-row"><label>説明</label><input id="mapSpotInfo" placeholder="来場者への案内文"></div>
+    <button class="btn btn-primary btn-sm" onclick="EP.addMapSpot()">スポットを追加</button>
+  </div>
+  `;
+}
+function adminNotices(){
+  const ev = getEvent(S.adminEditingEventId);
+  const list = S.notices[ev.id];
+  return `
+  <div class="card pad" style="margin-bottom:16px;">
+    <div style="font-weight:800;font-size:14px;margin-bottom:12px;">お知らせを投稿：${ev.name}</div>
+    <div class="admin-form-row"><label>タイトル</label><input id="noticeTitle" placeholder="例：雨天時のお知らせ"></div>
+    <div class="admin-form-row"><label>本文</label><textarea id="noticeBody" placeholder="お知らせの内容を入力してください"></textarea></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:14px;"><input type="checkbox" id="noticeImportant"> 重要なお知らせとして目立たせる</label>
+    <button class="btn btn-primary" style="width:auto;padding:12px 28px;" onclick="EP.postNotice()">投稿してユーザーアプリに反映</button>
+  </div>
+  <div class="card pad">
+    <div style="font-weight:800;font-size:13.5px;margin-bottom:10px;">投稿済みのお知らせ</div>
+    <table class="table"><thead><tr><th>日付</th><th>タイトル</th><th>重要</th><th></th></tr></thead>
+    <tbody>${list.map((n,i)=>`<tr><td>${n.date}</td><td>${n.title}</td><td>${n.important?'⚠️':'－'}</td><td><button class="btn btn-outline btn-sm" onclick="EP.removeNotice(${i})">削除</button></td></tr>`).join('')}</tbody></table>
+  </div>
+  `;
+}
+function adminCongestion(){
+  const ev = getEvent(S.adminEditingEventId);
+  const c = S.congestion[ev.id]||{};
+  const labels=[['🟢','空いています','badge-green'],['🟡','やや混雑','badge-yellow'],['🔴','混雑','badge-red']];
+  return `
+  <div class="card pad">
+    <div style="font-weight:800;font-size:14px;margin-bottom:6px;">混雑情報管理：${ev.name}</div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">ボタンを押すと、ユーザーアプリの混雑情報に即座に反映されます（このブラウザ内）。</div>
+    ${ev.congestionSpots.map(sp=>{
+      const entry = c[sp]||{level:0,updatedAt:null};
+      return `
+      <div class="congestion-row">
+        <div class="congestion-name">${sp}${entry.updatedAt?`<span style="font-size:10.5px;color:var(--ink-faint);font-weight:600;">最終更新 ${fmtTimestamp(entry.updatedAt)}</span>`:''}</div>
+        <div style="display:flex;gap:6px;">
+          ${labels.map((l,i)=>`<button class="badge ${l[2]}" style="border:2px solid ${entry.level===i?'currentColor':'transparent'};" onclick="EP.setCongestion('${sp}',${i})">${l[0]}</button>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  `;
+}
+function adminTickets(){
+  const ev = getEvent(S.adminEditingEventId);
+  const evTickets = (S.allTickets||[]).filter(t=>t.eventId===ev.id);
+  const issued = evTickets.length, used = evTickets.filter(t=>t.status==='used').length;
+  const rate = issued? Math.round(used/issued*100):0;
+  return `
+  <div class="admin-grid">
+    <div class="stat-card"><div class="num">${issued}</div><div class="lbl">発行枚数</div></div>
+    <div class="stat-card"><div class="num">${used}</div><div class="lbl">使用枚数</div></div>
+    <div class="stat-card"><div class="num">${issued-used}</div><div class="lbl">未使用枚数</div></div>
+    <div class="stat-card"><div class="num">${used}</div><div class="lbl">チェックイン数</div></div>
+    <div class="stat-card"><div class="num">${rate}%</div><div class="lbl">チェックイン率</div></div>
+  </div>
+  <div class="card pad">
+    <div style="font-weight:800;font-size:13.5px;margin-bottom:10px;">チケット一覧：${ev.name}</div>
+    <table class="table">
+      <thead><tr><th>チケットID</th><th>種類</th><th>発行日時</th><th>状態</th></tr></thead>
+      <tbody>${evTickets.map(t=>`<tr><td>${t.id}</td><td>${t.typeName}</td><td>${t.issuedAt}</td><td>${t.status==='valid'?'<span class="badge badge-green">利用可能</span>':'<span class="badge" style="background:#EFE9E2;color:var(--ink-faint);">使用済み</span>'}</td></tr>`).join('')}</tbody>
+    </table>
+  </div>
+  `;
+}
+
+/* ---------- Staff QR checkin ---------- */
+function renderStaff(){
+  let inner='';
+  if(S.staffScanState==='idle') inner = staffIdle();
+  else if(S.staffScanState==='scanning') inner = staffScanning();
+  else if(S.staffScanState==='verifying') inner = staffVerifying();
+  else if(S.staffScanState==='result') inner = staffResultScreen();
+  return `<div class="phone-shell"><div class="phone-notch"></div>
+    <div class="screen" style="padding-bottom:24px;">
+      <div class="topbar"><button class="back-btn" onclick="EP.requestReturnToUser()">${icon('back')}</button><h1>${S.lang==='en'?'Staff Check-in':'スタッフ用チェックイン'}</h1></div>
+      <div class="staff-shell">${inner}</div>
+    </div>
+  </div>
+  ${S.showReturnToUserConfirm?renderReturnToUserConfirm():''}`;
+}
+function staffIdle(){
+  const ev = getEvent(S.adminEditingEventId) || EVENTS[0];
+  return `
+  <div style="font-size:13px;color:var(--ink-soft);margin-top:6px;">${ev?ev.name:''}・${S.lang==='en'?'Entrance':'入場受付'}</div>
+  ${S.scanError?`<div class="status-banner offline" style="border-radius:12px;margin-top:10px;max-width:280px;">⚠ ${S.scanError}</div>`:''}
+  <button class="staff-scanner" onclick="EP.startScan()">${icon('qr')}</button>
+  <button class="btn btn-primary" style="max-width:280px;" onclick="EP.startScan()">${icon('camera')} ${S.lang==='en'?'Scan QR Code':'QRを読み取る'}</button>
+  ${S.scanError?`<button class="btn btn-outline" style="max-width:280px;margin-top:10px;" onclick="EP.retryCamera()">${t('cam_retry')}</button>`:''}
+  <div class="hr" style="width:100%;max-width:280px;"></div>
+  <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">${S.lang==='en'?'If scanning does not work':'カメラでの読み取りが難しい場合'}</div>
+  <div style="max-width:280px;width:100%;text-align:left;">
+    <label style="font-size:11.5px;font-weight:800;color:var(--ink-soft);display:block;margin-bottom:5px;">${t('ticket_id_label')}</label>
+    <input id="manualTicketId" placeholder="INP-2026-XXXXXXXX" style="width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-sm);font-size:13px;margin-bottom:10px;outline:none;box-sizing:border-box;">
+  </div>
+  <button class="btn btn-outline" style="max-width:280px;" onclick="EP.manualCheckin()">${t('ticket_id_verify')}</button>
+  <div class="form-note" style="max-width:280px;">${CLOUD_MODE
+    ? (S.lang==='en' ? 'Ticket validity is verified securely on the server.' : 'チケットの有効性はサーバー側で安全に検証されます。')
+    : (S.lang==='en' ? 'This browser checks ticket validity locally only; it is not shared with other devices.' : 'このブラウザ内でチケットの有効性・重複チェックインを判定します。他の端末とはデータが共有されないため、複数端末で同時に受付する場合はご注意ください（README.md参照）。')}</div>
+  `;
+}
+function staffScanning(){
+  return `
+  <div style="font-size:13px;color:var(--ink-soft);margin-top:6px;">${S.lang==='en'?'Scanning for QR code…':'カメラでQRコードを読み取っています…'}</div>
+  <div class="staff-scanner">
+    <video id="qrVideo" playsinline muted autoplay></video>
+    <canvas id="qrCanvas" style="display:none;"></canvas>
+    <div class="scan-line"></div>
+  </div>
+  <div id="cameraSwitcherSlot">${renderCameraSwitcherHTML()}</div>
+  ${S.debugPanelOn?`<div id="qrDebugPanel" style="max-width:280px;width:100%;margin-bottom:10px;padding:8px 10px;background:#1a1a1a;color:#8f8;font-size:10.5px;font-family:monospace;border-radius:8px;text-align:left;line-height:1.6;">${renderDebugPanelHTML()}</div>`:''}
+  <div style="font-size:12.5px;color:var(--ink-faint);margin-bottom:14px;">${S.lang==='en'?'Align the QR code within the frame':'QRコードを枠内に合わせてください'}</div>
+  <button class="btn btn-outline" style="max-width:280px;" onclick="EP.cancelScan()">${S.lang==='en'?'Cancel and enter manually':'キャンセルして手入力に切り替える'}</button>
+  `;
+}
+function renderDebugPanelHTML(){
+  const d = S.debugInfo||{};
+  return `Camera: ${S.cameraStream?'OK':'—'}<br>Video: ${d.videoW||0} × ${d.videoH||0}<br>Detector: ${d.detector||'—'}<br>Scanning: ${d.scanning?'YES':'NO'}${d.lastDetected?`<br>QR detected:<br>${d.lastDetected}`:''}`;
+}
+function renderCameraSwitcherHTML(){
+  const cams = S.cameraList||[];
+  if(cams.length<=1) return '';
+  return `
+  <div style="max-width:280px;width:100%;margin-bottom:12px;">
+    <label style="font-size:11px;font-weight:800;color:var(--ink-soft);display:block;margin-bottom:4px;">${S.lang==='en'?'Camera':'カメラ'}</label>
+    <select onchange="EP.switchCamera(this.value)" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--r-sm);font-size:13px;">
+      ${cams.map(c=>`<option value="${c.deviceId}" ${S.preferredCameraId===c.deviceId?'selected':''}>${c.label || (S.lang==='en'?'Camera':'カメラ')}</option>`).join('')}
+    </select>
+  </div>`;
+}
+function staffVerifying(){
+  return `
+  <div style="font-size:34px;margin:20px 0 10px;">📷</div>
+  <div style="font-weight:800;font-size:15px;margin-bottom:10px;">${S.lang==='en'?'QR code detected':'QRコードを読み取りました'}</div>
+  <div style="font-family:monospace;font-size:13px;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-sm);padding:10px 16px;margin-bottom:18px;">${S.verifyingTicketId||''}</div>
+  <div style="display:flex;align-items:center;gap:8px;color:var(--ink-soft);font-size:12.5px;"><span class="spinner" style="border-top-color:var(--coral);border-color:var(--line);"></span>${S.lang==='en'?'Verifying…':'確認しています…'}</div>
+  `;
+}
+function staffResultScreen(){
+  const r = S.staffResult;
+  const cfg = {
+    ok:{bg:"var(--ok-soft)",color:"var(--ok)",icon:"✅",title:t('checkin_ok_title'),desc:t('checkin_ok_desc')},
+    used:{bg:"var(--warn-soft)",color:"var(--warn)",icon:"⚠️",title:t('checkin_used_title'),desc:''},
+    invalid:{bg:"var(--danger-soft)",color:"var(--danger)",icon:"❌",title:t('checkin_invalid_title'),desc:r.error||''},
+  }[r.status];
+  return `
+  <div class="result-card" style="background:${cfg.bg};color:${cfg.color};">
+    <div class="icon">${cfg.icon}</div>
+    <div class="status">${cfg.title}</div>
+    ${cfg.desc?`<div class="desc">${cfg.desc}</div>`:''}
+    ${r.id?`<div class="desc" style="margin-top:8px;opacity:.7;">${S.lang==='en'?'Ticket ID':'チケットID'}: ${r.id}</div>`:''}
+    ${r.typeName?`<div class="desc" style="margin-top:4px;">${r.typeName}</div>`:''}
+  </div>
+  <button class="btn btn-primary" style="max-width:280px;margin-top:22px;" onclick="EP.resetScan()">${S.lang==='en'?'Scan next ticket':'次のチケットをスキャン'}</button>
+  `;
+}
+
+/* ============ Controller ============ */
+const EP = {
+  setMode(m){
+    EP._stopCamera();
+    if(m!=='user'){
+      if(!S.currentUser){ S.showAuthModal='login'; S.authError='この機能を利用するにはログインが必要です。'; render(); return; }
+      if(m==='admin' && !canSwitchTo('organizer')){ toast('主催者アカウントのみ利用できます'); return; }
+      if(m==='staff' && !canSwitchTo('staff')){ toast('スタッフアカウントのみ利用できます'); return; }
+    }
+    S.mode=m; S.showAppModeChooser=false; if(m==='staff'){S.staffScanState='idle';} render(); scrollTop();
+  },
+  openLangPicker(){ S.showLangPicker=true; render(); },
+  closeLangPicker(){ S.showLangPicker=false; render(); },
+  setLang(l){ S.lang=l; saveLang(l); S.showLangPicker=false; render(); },
+  openAppModeChooser(){ S.showAppModeChooser=true; S.appModePasswordError=''; render(); },
+  closeAppModeChooser(){ S.showAppModeChooser=false; S.appModePasswordError=''; render(); },
+  chooseAppMode(role){
+    if(role==='user'){ EP.setMode('user'); S.showAppModeChooser=false; render(); return; }
+    // 主催者・スタッフへの切り替えは、実際の権限の有無にかかわらず必ずこの確認画面を経由する。
+    // これはUI上のロックであり、本当のデータ操作の可否はSupabaseのRLS/RPCがサーバー側で判定する。
+    S.pendingAppMode = role;
+    S.appModePasswordError='';
+    render();
+  },
+  submitAppModePassword(){
+    const pw = document.getElementById('appModePassword')?.value;
+    if(pw !== DEV_MODE_PASSWORD){ S.appModePasswordError='パスワードが正しくありません。'; render(); return; }
+    const target = S.pendingAppMode;
+    S.devModeUnlocked = target;
+    S.pendingAppMode = null;
+    S.showAppModeChooser = false;
+    EP.setMode(target==='organizer' ? 'admin' : 'staff');
+  },
+  cancelAppModePassword(){ S.pendingAppMode=null; S.appModePasswordError=''; render(); },
+  requestReturnToUser(){ S.showReturnToUserConfirm=true; render(); },
+  cancelReturnToUser(){ S.showReturnToUserConfirm=false; render(); },
+  confirmReturnToUser(){
+    S.showReturnToUserConfirm=false;
+    S.devModeUnlocked=null;
+    EP._stopCamera();
+    S.mode='user'; S.view='home';
+    render(); scrollTop();
+  },
+  async fetchWeather(eventId, lat, lng){
+    try{
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia%2FTokyo`;
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('weather fetch failed');
+      const data = await res.json();
+      const cur = data.current || {};
+      S.weatherCache[eventId] = {
+        loading:false, error:false,
+        temp: cur.temperature_2m, humidity: cur.relative_humidity_2m, weatherCode: cur.weather_code,
+        fetchedAt: new Date(),
+      };
+    }catch(err){
+      S.weatherCache[eventId] = {loading:false, error:true};
+    }
+    render();
+  },
+  async shareEvent(eventId){
+    const ev = getEvent(eventId);
+    if(!ev) return;
+    const url = `${location.origin}${location.pathname}#event=${ev.id}`;
+    const text = `${ev.name}\n${fmtRange(ev)} ${ev.startTime||''}〜\n${ev.venue}\n\nインパスでイベントをチェック：`;
+    if(navigator.share){
+      try{ await navigator.share({title:ev.name, text, url}); }
+      catch(err){ /* ユーザーがキャンセルした場合は何もしない */ }
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      toast('イベント情報をコピーしました');
+    }catch(err){
+      toast('共有に対応していないブラウザです');
+    }
+    render();
+  },
+  requestLocation(){
+    if(!navigator.geolocation){ S.geoStatus='unsupported'; toast('このブラウザは位置情報に対応していません'); render(); return; }
+    S.geoStatus='loading'; render();
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{ S.userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude}; S.geoStatus='granted'; toast('現在地を取得しました'); render(); },
+      (err)=>{ S.geoStatus='denied'; toast('位置情報を取得できませんでした'); render(); },
+      {timeout:8000}
+    );
+  },
+  go(v){ S.view=v; render(); scrollTop(); },
+  openEvent(id){ S.eventId=id; S.view='detail'; S.detailTab='概要'; S.selectedDay=null; render(); scrollTop(); },
+  setDetailTab(t){ S.detailTab=t; render(); scrollTop(); },
+  setDay(d){ S.selectedDay=d; render(); },
+
+  async toggleFav(id){
+    const wasFav = S.favorites.has(id);
+    if(!S.currentUser){ S.showAuthModal='login'; S.authError='お気に入り登録にはログインが必要です。'; render(); return; }
+    // optimistic UI
+    if(wasFav) S.favorites.delete(id); else S.favorites.add(id);
+    render();
+    try{ await DATA.toggleFavorite(id, wasFav); toast(wasFav?'お気に入りを解除しました':'お気に入りに追加しました'); }
+    catch(err){ if(wasFav) S.favorites.add(id); else S.favorites.delete(id); toast(friendlyError(err)); }
+    render();
+  },
+
+  setSearch(k,v){ S.searchQuery[k]=v; render(); },
+  setPhotoFilter(c){ S.photoFilter=c; render(); },
+  async uploadPhotoFile(eventId, inputEl){
+    const file = inputEl.files && inputEl.files[0];
+    if(!file) return;
+    if(!S.currentUser){ S.showAuthModal='login'; S.authError='写真のアップロードにはログインが必要です。'; render(); return; }
+    S.photoUploadPct=0; render();
+    try{
+      await DATA.uploadPhoto(eventId, file, (pct)=>{ S.photoUploadPct=pct; render(); });
+      toast('写真を追加しました');
+    }catch(err){ toast(friendlyError(err)); }
+    S.photoUploadPct=null; render();
+  },
+  showPin(i){ S.mapPopup=i; render(); },
+  closeMapPopup(){ S.mapPopup=null; render(); },
+
+  async issueTicket(eventId,typeId){
+    const ev = getEvent(eventId); const tt = ev.ticketTypes.find(x=>x.id===typeId);
+    if(!S.currentUser){ S.showAuthModal='login'; S.authError='チケットの取得にはログインが必要です。'; render(); return; }
+    S.busy.issueTicket = true; render();
+    try{
+      await DATA.issueTicket(eventId, typeId, tt.name);
+      S.showTicketModal=null; toast('チケットを取得しました');
+      S.view='mytickets';
+    }catch(err){
+      toast(err.code==='already-issued' ? err.message : friendlyError(err));
+    }
+    S.busy.issueTicket=false; render(); scrollTop();
+  },
+
+  closeModal(){ S.showTicketModal=null; render(); },
+  openTicket(id){ S.ticketDetailId=id; renderTicketDetailOverlay(); },
+  closeTicketDetail(){ document.getElementById('ticketDetailOverlay')?.remove(); },
+
+  setAdminView(v){ S.adminView=v; render(); },
+  editEvent(id){ S.adminEditingEventId=id; S.adminView='events'; render(); },
+  openNewEventForm(){ S.showNewEventForm=true; S.newEventError=''; render(); },
+  closeNewEventForm(){ S.showNewEventForm=false; render(); },
+  async submitNewEvent(){
+    const g = id=>document.getElementById(id)?.value.trim();
+    const name=g('neName'), desc=g('neDesc'), category=document.getElementById('neCategory').value,
+      prefecture=g('nePrefecture'), city=g('neCity'), venue=g('neVenue'), start=g('neStart'), end=g('neEnd'), time=g('neTime');
+    if(!name || !start){ S.newEventError='イベント名と開催日（開始）は必須です。'; render(); return; }
+    const payload = {
+      title:name, description:desc, category, prefecture, city, venue,
+      startDate:start, endDate:end||start, time,
+    };
+    if(!S.currentUser){ S.showAuthModal='login'; S.authError='イベントの作成にはログインが必要です。'; render(); return; }
+    S.busy.createEvent=true; render();
+    try{
+      const ref = await DATA.createEvent(payload);
+      await DATA.updateEventRemote(ref.id, {status:'published'});
+      S.showNewEventForm=false; S.adminEditingEventId=ref.id;
+      toast('イベントを作成し、公開しました');
+    }catch(err){ S.newEventError = friendlyError(err); }
+    S.busy.createEvent=false; render();
+  },
+  updateEvent(field,val){ const ev=getEvent(S.adminEditingEventId); ev[field]=val; render(); },
+  async saveEvent(){
+    const ev = getEvent(S.adminEditingEventId);
+    if(ev.organizerId && S.currentUser && ev.organizerId!==S.currentUser.uid){ toast('自分が作成したイベントのみ編集できます。'); return; }
+    try{
+      await DATA.updateEventRemote(S.adminEditingEventId, {
+        title:ev.name, description:ev.desc, category:ev.category, venue:ev.venue,
+        startDate:ev.dateStart, endDate:ev.dateEnd,
+      });
+      toast('イベント情報を保存しました');
+    }catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+  setAdminDay(d){ S.adminDay=d; render(); },
+  updateMapSpot(i,field,val){ const ev=getEvent(S.adminEditingEventId); ev.mapPins[i][field]=val; DATA.persistEvents(); },
+  addMapSpot(){
+    const ev = getEvent(S.adminEditingEventId);
+    const type = document.getElementById('mapSpotType').value;
+    const label = document.getElementById('mapSpotLabel').value.trim() || PIN_TYPE_LABELS[type];
+    const x = Math.max(0,Math.min(360, parseInt(document.getElementById('mapSpotX').value,10)||180));
+    const y = Math.max(0,Math.min(280, parseInt(document.getElementById('mapSpotY').value,10)||140));
+    const info = document.getElementById('mapSpotInfo').value.trim();
+    ev.mapPins.push({x,y,type,label,info});
+    DATA.persistEvents();
+    toast('スポットを追加しました');
+    render();
+  },
+  removeMapSpot(i){
+    const ev = getEvent(S.adminEditingEventId);
+    ev.mapPins.splice(i,1);
+    DATA.persistEvents();
+    render();
+  },
+  async assignStaff(){
+    const email = document.getElementById('staffEmailInput').value.trim();
+    S.staffAssignError='';
+    if(!email){ S.staffAssignError='メールアドレスを入力してください。'; render(); return; }
+    const ev = getEvent(S.adminEditingEventId);
+    try{
+      await DATA.assignStaff(ev.id, email);
+      S.staffList[ev.id] = null; // 再読み込みさせる
+      toast('スタッフを追加しました');
+      render();
+    }catch(err){ S.staffAssignError = friendlyError(err); render(); }
+  },
+  async removeStaff(staffId){
+    const ev = getEvent(S.adminEditingEventId);
+    try{
+      await DATA.removeStaff(ev.id, staffId);
+      S.staffList[ev.id] = null;
+      toast('担当を解除しました');
+    }catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+  addSchedRow(){ const ev=getEvent(S.adminEditingEventId); ev.schedule[S.adminDay].push({t:'00:00',title:'新しいプログラム',sub:''}); DATA.persistEvents(); render(); },
+  updateSchedRow(i,field,val){ const ev=getEvent(S.adminEditingEventId); ev.schedule[S.adminDay][i][field]=val; DATA.persistEvents(); },
+  removeSchedRow(i){ const ev=getEvent(S.adminEditingEventId); ev.schedule[S.adminDay].splice(i,1); DATA.persistEvents(); render(); },
+
+  async postNotice(){
+    const title=document.getElementById('noticeTitle').value.trim();
+    const body=document.getElementById('noticeBody').value.trim();
+    const important=document.getElementById('noticeImportant').checked;
+    if(!title||!body){ toast('タイトルと本文を入力してください'); render(); return; }
+    const ev = getEvent(S.adminEditingEventId);
+    try{ await DATA.postAnnouncement(ev.id,title,body,important); toast('お知らせを投稿しました（ユーザーアプリに反映）'); }
+    catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+  async removeNotice(i){
+    const ev = getEvent(S.adminEditingEventId);
+    const n = S.notices[ev.id][i];
+    try{ await DATA.removeAnnouncementRemote(ev.id, n.id); toast('お知らせを削除しました'); }catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+  async setCongestion(spot,level){
+    const evId = S.adminEditingEventId;
+    try{ await DATA.setCrowdStatus(evId, spot, level); toast(spot+'の混雑状況を更新しました'); }
+    catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+
+  async startScan(){
+    S.scanError=null; S.scanErrorCode=null; S.staffScanState='scanning'; render();
+    await EP._beginCameraScan();
+  },
+  retryCamera(){
+    S.scanError=null; S.scanErrorCode=null; S.staffScanState='scanning'; render();
+    EP._beginCameraScan();
+  },
+  async _waitForJsQR(timeoutMs){
+    const start = Date.now();
+    while(typeof window.jsQR !== 'function'){
+      if(window.__jsQrLibFailed) return false;
+      if(Date.now()-start > timeoutMs) return false;
+      await new Promise(r=>setTimeout(r,100));
+    }
+    return true;
+  },
+  async _beginCameraScan(){
+    if(S._cameraStarting){ console.log('[camera] _beginCameraScan already in progress, ignoring duplicate call'); return; }
+    S._cameraStarting = true;
+    const video = document.getElementById('qrVideo');
+    const canvas = document.getElementById('qrCanvas');
+    if(!video || !canvas){ S._cameraStarting=false; return; }
+
+    // 1) HTTPS（安全なコンテキスト）かどうか
+    if(!window.isSecureContext){
+      S.staffScanState='idle'; S.scanErrorCode='insecure'; S.scanError=t('cam_insecure'); S._cameraStarting=false; render(); return;
+    }
+    // 2) mediaDevices / getUserMedia が存在するか
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      S.staffScanState='idle'; S.scanErrorCode='unsupported'; S.scanError=t('cam_unsupported'); S._cameraStarting=false; render(); return;
+    }
+
+    // 3) 読み取り方式を決定：優先順位 ① ブラウザ内蔵のBarcodeDetector API（追加ライブラリ不要）
+    //    ② アプリに同梱したQRライブラリ（jsQR） ③ 見つからなければエラー
+    let detectorMode = null; // 'native' | 'jsqr'
+    let barcodeDetector = null;
+    if('BarcodeDetector' in window){
+      try{
+        const formats = await window.BarcodeDetector.getSupportedFormats();
+        if(formats.includes('qr_code')){
+          barcodeDetector = new window.BarcodeDetector({formats:['qr_code']});
+          detectorMode = 'native';
+        }
+      }catch(e){ console.error('BarcodeDetector unavailable:', e); }
+    }
+    if(!detectorMode){
+      const libOk = await EP._waitForJsQR(3000);
+      if(!libOk){
+        S.staffScanState='idle'; S.scanErrorCode='library'; S.scanError=t('cam_library'); S._cameraStarting=false; render(); return;
+      }
+      detectorMode = 'jsqr';
+    }
+    S.debugInfo = {detector:detectorMode, scanning:false, videoW:0, videoH:0};
+
+    try{
+      // iPhone Safari対策：直前にカメラを停止した場合、OS側の解放が
+      // 完了する前に再度リクエストすると失敗することがあるため少し待つ
+      await new Promise(r=>setTimeout(r,250));
+      // 4) カメラへのアクセスを要求（スマホでは可能な限り背面カメラを使用）
+      const constraints = { audio:false, video: S.preferredCameraId
+        ? { deviceId:{exact:S.preferredCameraId} }
+        : { facingMode:{ideal:'environment'} } };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('[camera] getUserMedia succeeded, tracks:', stream.getTracks().map(t=>t.label));
+      S.cameraStream = stream;
+      video.srcObject = stream;
+      stream.getTracks().forEach(track=>{
+        track.addEventListener('ended', ()=>{
+          console.log('[camera] track ended unexpectedly (readyState=ended). This usually means the OS/browser reclaimed the camera, not our own code.');
+        });
+      });
+      await video.play();
+      console.log('[camera] video.play() resolved, video is now playing');
+
+      // 5) 権限取得後に利用可能なカメラを列挙（切り替え用）
+      try{
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        S.cameraList = devices.filter(d=>d.kind==='videoinput');
+      }catch(e){ S.cameraList = []; }
+
+      const ctx = canvas.getContext('2d', {willReadFrequently:true});
+      const tick = async ()=>{
+        if(S.staffScanState!=='scanning') return; // 画面が切り替わったら停止
+        // video.readyState だけでなく、実際にフレームの幅・高さが
+        // 確定しているかも確認する（iPhoneで「映像は出るが解析されない」
+        // 状態の主な原因の一つ）。
+        const ready = video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0;
+        if(ready && !S._decoding){
+          S._decoding = true;
+          let text = null;
+          if(detectorMode==='native'){
+            try{
+              const results = await barcodeDetector.detect(video);
+              if(results && results.length){ text = results[0].rawValue; }
+            }catch(e){ console.error('BarcodeDetector decode error:', e); }
+          }else{
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            ctx.drawImage(video,0,0,canvas.width,canvas.height);
+            const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+            try{
+              // inversionAttempts:"attemptBoth" は、印刷物だけでなく
+              // 「別の画面に表示されたQRコード」を読み取る今回のケースで
+              // 認識率に大きく影響するため明示的に指定する。
+              const code = window.jsQR(imgData.data, imgData.width, imgData.height, {inversionAttempts:"attemptBoth"});
+              if(code && code.data) text = code.data;
+            }catch(e){ console.error('jsQR decode error:', e); }
+          }
+          S._decoding = false;
+          if(text){
+            S.debugInfo = {...S.debugInfo, lastDetected:text};
+            EP._stopCamera();
+            EP.handleScannedText(text);
+            return;
+          }
+        }
+        if(S.debugPanelOn){
+          S.debugInfo = {...S.debugInfo, videoW:video.videoWidth, videoH:video.videoHeight, detector:detectorMode, scanning:true};
+          const dbg = document.getElementById('qrDebugPanel');
+          if(dbg) dbg.innerHTML = renderDebugPanelHTML();
+        }
+        S.scanRAF = requestAnimationFrame(tick);
+      };
+      S.scanRAF = requestAnimationFrame(tick);
+      // 重要：ここで render() を呼ぶと innerHTML 全体が再構築され、
+      // 今まさに映像を映している <video> 要素ごと作り直されて真っ黒になる
+      // （特にiPhoneで顕著）。カメラ切り替えUIだけをその場で差し込む。
+      const slot = document.getElementById('cameraSwitcherSlot');
+      if(slot) slot.innerHTML = renderCameraSwitcherHTML();
+      S._cameraStarting = false;
+    }catch(err){
+      console.error('camera start failed:', err);
+      EP._stopCamera();
+      S.staffScanState='idle';
+      const name = err && err.name;
+      if(name==='NotAllowedError' || name==='PermissionDeniedError'){ S.scanErrorCode='permission'; }
+      else if(name==='NotFoundError' || name==='DevicesNotFoundError'){ S.scanErrorCode='notfound'; }
+      else { S.scanErrorCode='other'; }
+      S.scanError = t('cam_'+S.scanErrorCode);
+      S._cameraStarting = false;
+      render();
+    }
+  },
+  async switchCamera(deviceId){
+    S.preferredCameraId = deviceId || null;
+    EP._stopCamera();
+    S.staffScanState='scanning'; render();
+    await EP._beginCameraScan();
+  },
+  _stopCamera(){
+    if(S.cameraStream) console.log('[camera] stopping camera stream. stack:', new Error().stack);
+    if(S.scanRAF) cancelAnimationFrame(S.scanRAF);
+    S.scanRAF=null;
+    if(S.cameraStream){ S.cameraStream.getTracks().forEach(t=>t.stop()); S.cameraStream=null; }
+    // iPhone Safari対策：video要素にストリームの参照が残っていると、
+    // 次回 getUserMedia() が正しく動作しないことがあるため明示的に解放する
+    try{
+      const v = document.getElementById('qrVideo');
+      if(v){ v.pause(); v.srcObject = null; }
+    }catch(e){}
+  },
+  handleScannedText(text){
+    const parts = String(text).split(':');
+    let ticketId = text, scannedEventId = null;
+    if(parts[0]==='INPASS1' && parts.length>=3){ ticketId = parts[1]; scannedEventId = parts[2]; }
+    S.staffScanState='verifying'; S.verifyingTicketId=ticketId; render();
+    evaluateCheckin(ticketId, scannedEventId);
+  },
+  cancelScan(){
+    EP._stopCamera();
+    S.staffScanState='idle'; S.scanError=null; S.scanErrorCode=null; render();
+    setTimeout(()=>document.getElementById('manualTicketId')?.focus(), 50);
+  },
+  manualCheckin(){
+    const val = document.getElementById('manualTicketId').value.trim();
+    if(!val){ toast(S.lang==='en'?'Please enter a ticket ID':'チケットIDを入力してください'); render(); return; }
+    evaluateCheckin(val, null);
+  },
+  resetScan(){ EP._stopCamera(); S.staffScanState='idle'; S.staffResult=null; S.scanError=null; S.scanErrorCode=null; render(); },
+
+  /* ---- Auth ---- */
+  openAuth(view){ S.showAuthModal=view; S.authError=''; render(); },
+  closeAuth(){ S.showAuthModal=null; S.authError=''; render(); },
+  async submitAuth(view){
+    const email = document.getElementById('authEmail')?.value.trim();
+    const password = document.getElementById('authPassword')?.value;
+    const name = document.getElementById('authName')?.value.trim();
+    S.authError='';
+    if(view==='newPassword'){
+      if(!password || password.length<6){ S.authError='パスワードは6文字以上で設定してください。'; render(); return; }
+      S.authLoading=true; render();
+      try{
+        await DATA.completePasswordReset(password);
+        S.showAuthModal=null; toast('パスワードを設定しました。');
+      }catch(err){ S.authError = friendlyError(err); }
+      S.authLoading=false; render(); return;
+    }
+    if(view==='reset' && CLOUD_MODE){
+      if(!email){ S.authError='メールアドレスを入力してください。'; render(); return; }
+      S.authLoading=true; render();
+      try{
+        await DATA.resetPassword(email);
+        S.showAuthModal=null; toast('パスワード再設定用のメールを送信しました。メール内のリンクをご確認ください。');
+      }catch(err){ S.authError = friendlyError(err); }
+      S.authLoading=false; render(); return;
+    }
+    if(!email || !password){ S.authError='メールアドレスとパスワードを入力してください。'; render(); return; }
+    if(view==='signup' && !name){ S.authError='お名前を入力してください。'; render(); return; }
+    S.authLoading=true; render();
+    try{
+      if(view==='signup') await DATA.signUp(email,password,name);
+      else if(view==='login') await DATA.logIn(email,password);
+      else if(view==='reset'){ await DATA.resetPassword(email,password); toast('パスワードを再設定しました。ログインしてください。'); S.showAuthModal='login'; S.authLoading=false; render(); return; }
+      S.showAuthModal=null; toast(view==='signup'?'アカウントを作成しました':'ログインしました');
+    }catch(err){ S.authError = friendlyError(err); }
+    S.authLoading=false; render();
+  },
+  async logOut(){
+    try{ await DATA.logOut(); S.mode='user'; S.view='home'; toast('ログアウトしました'); }
+    catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+  async toggleNotificationPref(enabled){
+    if(!S.currentUser) return;
+    await DATA.setNotificationPref(S.currentUser.uid, enabled);
+    toast(enabled?'通知をオンにしました':'通知をオフにしました');
+    render();
+  },
+  async requestNotifPermission(){
+    if(typeof Notification==="undefined"){ toast('このブラウザは通知に対応していません'); return; }
+    const result = await Notification.requestPermission();
+    toast(result==='granted' ? '通知を許可しました' : '通知は許可されませんでした');
+    render();
+  },
+  sendTestNotification(){
+    if(typeof Notification==="undefined" || Notification.permission!=='granted'){ toast('通知が許可されていません'); return; }
+    new Notification('🔔 インパスからのお知らせ', {
+      body: '開催まであと1日です！忘れずにチケットをご確認ください。',
+      icon: 'icons/icon-192.png',
+    });
+    toast('テスト通知を送信しました');
+  },
+  openDeleteAccount(){ S.showDeleteAccountConfirm=true; render(); scrollTop(); },
+  cancelDeleteAccount(){ S.showDeleteAccountConfirm=false; render(); scrollTop(); },
+  async confirmDeleteAccount(){
+    if(!S.currentUser) return;
+    try{
+      await DATA.deleteAccount(S.currentUser.uid);
+      S.showDeleteAccountConfirm=false; S.mode='user'; S.view='home';
+      toast('退会しました。ご利用ありがとうございました。');
+    }catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+  async uploadAvatar(inputEl){
+    const file = inputEl.files && inputEl.files[0];
+    if(!file || !S.currentUser) return;
+    if(!CLOUD_MODE){ toast(S.lang==='en'?'Profile photos require cloud mode.':'プロフィール画像の変更にはクラウドモードが必要です。'); return; }
+    S.avatarUploadPct = 0; render();
+    try{
+      const url = await DATA.uploadAvatar(S.currentUser.uid, file, (pct)=>{ S.avatarUploadPct=pct; render(); });
+      S.currentUser.avatarUrl = url;
+      toast(S.lang==='en'?'Profile photo updated.':'プロフィール画像を更新しました');
+    }catch(err){ toast(friendlyError(err)); }
+    S.avatarUploadPct = null; render();
+  },
+  async removeAvatar(){
+    if(!S.currentUser) return;
+    try{
+      await DATA.removeAvatar(S.currentUser.uid);
+      S.currentUser.avatarUrl = null;
+      toast(S.lang==='en'?'Profile photo removed.':'プロフィール画像を削除しました');
+    }catch(err){ toast(friendlyError(err)); }
+    render();
+  },
+  async switchRole(role){
+    if(!S.currentUser) return;
+    await DATA.devSetRole(role);
+    S.mode='user'; S.view='menu';
+    toast('アカウントの種類を「'+({user:'一般ユーザー',organizer:'主催者',staff:'スタッフ'}[role]||role)+'」に切り替えました');
+    render();
+  },
+};
+
+window.EP = EP; // inline onclick="EP.xxx()" handlers need this on window since we're now a module
+
+async function evaluateCheckin(id, scannedEventId){
+  const evId = S.adminEditingEventId; // このスタッフ画面が対象とするイベント
+  if(scannedEventId && scannedEventId!==evId){
+    S.staffResult = {status:'invalid', id, error: S.lang==='en' ? 'This ticket is not for this event.' : 'このイベント用のチケットではありません（担当外のQRコードです）'};
+    S.staffScanState='result'; render(); return;
+  }
+  try{
+    const res = await DATA.checkInTicket(id, evId);
+    S.staffResult = {status:res.status, id:res.ticketId||id, typeName:res.typeName};
+  }catch(err){
+    console.error('checkInTicket failed:', err);
+    S.staffResult = {status:'invalid', id, error:friendlyError(err)};
+  }
+  S.staffScanState='result'; render();
+}
+function toast(msg){ S.toastMsg=msg; }
+function scrollTop(){ const el=document.getElementById('scr'); if(el) el.scrollTop=0; }
+window.addEventListener('beforeunload', ()=>{ try{ EP._stopCamera(); }catch(e){} });
+let _hideTimer = null;
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    // 許可ダイアログの表示など、一瞬だけ visibilitychange が誤発火することがあるため、
+    // 短時間のうちに元に戻った場合はカメラを止めない（実際にアプリを離れた場合のみ停止）
+    if(_hideTimer) clearTimeout(_hideTimer);
+    _hideTimer = setTimeout(()=>{
+      if(document.hidden){
+        try{ EP._stopCamera(); if(S.staffScanState==='scanning'){ S.staffScanState='idle'; render(); } }catch(e){}
+      }
+    }, 800);
+  }else{
+    if(_hideTimer){ clearTimeout(_hideTimer); _hideTimer=null; }
+  }
+});
+window.addEventListener('error', (e)=>{ console.error('Uncaught error:', e.error||e.message); });
+window.addEventListener('unhandledrejection', (e)=>{ console.error('Unhandled promise rejection:', e.reason); });
+
+function renderTicketDetailOverlay(){
+  const wrap = document.createElement('div');
+  wrap.id='ticketDetailOverlay';
+  wrap.style.cssText='position:fixed;inset:0;z-index:150;background:var(--bg);max-width:430px;margin:0 auto;overflow-y:auto;';
+  const phoneShell = document.querySelector('.phone-shell');
+  const rect = phoneShell ? phoneShell.getBoundingClientRect() : null;
+  wrap.innerHTML = screenTicketDetail();
+  document.body.appendChild(wrap);
+  if(rect){ wrap.style.left = rect.left+'px'; wrap.style.width = rect.width+'px'; wrap.style.top = Math.max(rect.top,0)+'px'; wrap.style.height = rect.height+'px'; wrap.style.borderRadius = getComputedStyle(phoneShell).borderRadius; }
+}
+
+/* ---------- Auth modal ---------- */
+/* ---------- 言語選択 ---------- */
+function renderLangPicker(){
+  return `<div class="modal-overlay" onclick="if(event.target===this)EP.closeLangPicker()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;">${t('language')}</div>
+      <div class="menu-list" style="margin:0 0 14px;">
+        <div class="menu-row" onclick="EP.setLang('ja')">🇯🇵 日本語${S.lang==='ja'?'　✓':''}</div>
+        <div class="menu-row" onclick="EP.setLang('en')">🇺🇸 English${S.lang==='en'?'　✓':''}</div>
+      </div>
+      <button class="btn btn-outline" onclick="EP.closeLangPicker()">${S.lang==='en'?'Close':'閉じる'}</button>
+    </div>
+  </div>`;
+}
+/* ---------- 「ユーザーに戻る」確認ダイアログ ---------- */
+function renderReturnToUserConfirm(){
+  return `<div class="modal-overlay" onclick="if(event.target===this)EP.cancelReturnToUser()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:18px;text-align:center;">ユーザーモードに戻りますか？</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" style="flex:1;" onclick="EP.cancelReturnToUser()">キャンセル</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="EP.confirmReturnToUser()">戻る</button>
+      </div>
+    </div>
+  </div>`;
+}
+/* ---------- アプリモード切り替え（メニューから） ---------- */
+function renderAppModeChooser(){
+  const roleLabels = {
+    user: S.lang==='en'?'User':'ユーザー',
+    organizer: S.lang==='en'?'Organizer':'主催者',
+    staff: S.lang==='en'?'Staff':'スタッフ',
+  };
+  if(S.pendingAppMode){
+    const modeName = S.pendingAppMode==='organizer' ? '主催者' : 'スタッフ';
+    return `<div class="modal-overlay" onclick="if(event.target===this)EP.cancelAppModePassword()">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div style="font-weight:800;font-size:16px;margin-bottom:6px;">${modeName}モードへ切り替えます</div>
+        <div class="form-note" style="margin-top:0;margin-bottom:14px;">パスワードを入力してください</div>
+        ${S.appModePasswordError?`<div class="form-error">${S.appModePasswordError}</div>`:''}
+        <div class="form-field"><input id="appModePassword" type="password" placeholder="パスワード" onkeydown="if(event.key==='Enter')EP.submitAppModePassword()"></div>
+        <button class="btn btn-primary" onclick="EP.submitAppModePassword()">切り替える</button>
+        <button class="btn btn-outline" style="margin-top:8px;" onclick="EP.cancelAppModePassword()">キャンセル</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="modal-overlay" onclick="if(event.target===this)EP.closeAppModeChooser()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;">${t('title_appmode')}</div>
+      <div class="menu-list" style="margin:0 0 14px;">
+        <div class="menu-row" onclick="EP.chooseAppMode('user')">${icon('home')}${roleLabels.user}${S.mode==='user'?'　✓':''}${icon('chev','chev')}</div>
+        <div class="menu-row" onclick="EP.chooseAppMode('organizer')">${icon('cog')}${roleLabels.organizer}${S.mode==='admin'?'　✓':''}${icon('chev','chev')}</div>
+        <div class="menu-row" onclick="EP.chooseAppMode('staff')">${icon('qr')}${roleLabels.staff}${S.mode==='staff'?'　✓':''}${icon('chev','chev')}</div>
+      </div>
+      <button class="btn btn-outline" onclick="EP.closeAppModeChooser()">${S.lang==='en'?'Close':'閉じる'}</button>
+    </div>
+  </div>`;
+}
+function renderAuthModal(){
+  const view = S.showAuthModal;
+  if(view==='newPassword'){
+    return `<div class="modal-overlay">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div style="font-weight:800;font-size:16px;margin-bottom:6px;">新しいパスワードを設定</div>
+        <div class="form-note" style="margin-top:0;margin-bottom:14px;">メールのリンクから本人確認が完了しました。新しいパスワードを入力してください。</div>
+        ${S.authError?`<div class="form-error">${S.authError}</div>`:''}
+        <div class="form-field"><label>新しいパスワード</label><input id="authPassword" type="password" placeholder="6文字以上"></div>
+        <button class="btn btn-primary" ${S.authLoading?'disabled':''} onclick="EP.submitAuth('newPassword')">${S.authLoading?'<span class="spinner"></span>設定中…':'パスワードを設定'}</button>
+      </div>
+    </div>`;
+  }
+  const titles = {login:'ログイン', signup:'新規登録', reset:'パスワード再設定'};
+  return `<div class="modal-overlay" onclick="if(event.target===this)EP.closeAuth()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="auth-tabs">
+        <button class="auth-tab ${view==='login'?'active':''}" onclick="EP.openAuth('login')">ログイン</button>
+        <button class="auth-tab ${view==='signup'?'active':''}" onclick="EP.openAuth('signup')">新規登録</button>
+        <button class="auth-tab ${view==='reset'?'active':''}" onclick="EP.openAuth('reset')">再設定</button>
+      </div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;">${titles[view]}</div>
+      ${S.authError?`<div class="form-error">${S.authError}</div>`:''}
+      ${view==='signup'?`<div class="form-field"><label>お名前</label><input id="authName" placeholder="山田 太郎"></div>`:''}
+      <div class="form-field"><label>メールアドレス</label><input id="authEmail" type="email" placeholder="you@example.com"></div>
+      ${(view==='reset' && CLOUD_MODE) ? '' : `<div class="form-field"><label>${view==='reset'?'新しいパスワード':'パスワード'}</label><input id="authPassword" type="password" placeholder="6文字以上"></div>`}
+      <button class="btn btn-primary" ${S.authLoading?'disabled':''} onclick="EP.submitAuth('${view}')">${S.authLoading?'<span class="spinner"></span>処理中…':(view==='login'?'ログイン':view==='signup'?'アカウントを作成':(CLOUD_MODE?'再設定メールを送信':'パスワードを再設定'))}</button>
+      <div class="form-note">
+        ${view==='login'?'アカウントをお持ちでない方は「新規登録」タブへ。パスワードをお忘れの場合は「再設定」タブから再設定できます。':''}
+        ${view==='signup'?'登録後は一般ユーザーとしてご利用いただけます。主催者・スタッフ権限は運営による付与が必要です。':''}
+        ${view==='reset' ? (CLOUD_MODE
+          ? '登録済みのメールアドレス宛に、パスワード再設定用の安全なリンクを送信します。メール内のリンクを開くと、新しいパスワードを設定する画面が表示されます。'
+          : 'このアプリはサーバーを使わないため、メールでの本人確認はできません。登録済みのメールアドレスを入力し、新しいパスワードをそのまま設定してください。') : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- Status banners ---------- */
+function renderStatusBanners(){
+  let html='';
+  if(!S.storageOK) html += `<div class="status-banner offline">⚠ このブラウザではデータの保存ができません（プライベートブラウジング中など）。一部の操作が保存されない場合があります。</div>`;
+  return html;
+}
+
+/* ---------- init ---------- */
+S.isFirstLaunch = !sessionStorage.getItem('ep_visited');
+S.showSplash = true;
+S.splashHide = false;
+render();
+DATA.init();
+
+// register service worker for PWA install / offline shell (non-blocking, safe to fail in sandboxed preview)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').then((reg)=>{
+      // 新しいバージョンのService Workerが見つかったら、次回起動時に反映されるよう案内する
+      reg.addEventListener('updatefound', ()=>{
+        const newWorker = reg.installing;
+        if(!newWorker) return;
+        newWorker.addEventListener('statechange', ()=>{
+          if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+            toast(S.lang==='en' ? 'A new version is available. Reload to update.' : '新しいバージョンがあります。再読み込みすると更新されます。');
+            render();
+          }
+        });
+      });
+    }).catch((err)=>{ console.error('Service worker registration failed:', err); });
+  });
+}
+</script>
+</body>
+</html>
